@@ -16,4 +16,4 @@ class MailRequest(BaseModel):
 def read_item(request: MailRequest):
     pro = Extract()
     response = pro.process(request.content)
-    return {"response": response }
+    return {"response": response.content }
