@@ -1,4 +1,3 @@
-#https://docs.langchain.com/oss/python/integrations/chat/google_generative_ai
 import os
 from dotenv import load_dotenv
 
@@ -9,13 +8,17 @@ class Extract:
     def __init__(self):
         load_dotenv()
         GOOGLE_API_KEY = os.getenv("google_api_key")
-        print(GOOGLE_API_KEY)
+
+
+        # ✅ Step 1: Initialize LLM
         self.llm = ChatGoogleGenerativeAI(
             model="gemini-2.5-flash",
             temperature=0.7,
             max_retries=1,
             google_api_key=GOOGLE_API_KEY
         )
+
+
 
     def process(self, message: str):
         messages = [

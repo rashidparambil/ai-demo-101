@@ -3,8 +3,12 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 from genai.extract import Extract
+from .companies.routes import router as companies_router
 
 app = FastAPI()
+
+# Register the companies router
+app.include_router(companies_router)
 
 class MailRequest(BaseModel):
     from_address: str
