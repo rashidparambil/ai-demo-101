@@ -22,4 +22,3 @@ class CompanyRuleTable:
     company_id = Column(Integer, ForeignKey('company.id'))
     rule_content = Column(String(255), nullable=False)
     embeddings = Column(Vector(3072), nullable=True)
-

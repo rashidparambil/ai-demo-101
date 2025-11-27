@@ -13,3 +13,7 @@ class CompanyRule:
     company_id: int
     rule_content: str
     embedding: Vector(3072)
+
+class CompanyRules(BaseModel):
+    """Schema for a company including its ID (database response)."""
+    rules: list[str]
