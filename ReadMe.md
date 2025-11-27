@@ -15,6 +15,12 @@ LangChain GenAI
 Install following packages
     pip install -U langchain-google-genai
 
+
+Vector Embeding 
+
+pip install langchain langchain-google-genai langchain-postgres psycopg2-binary
+
+
 #-----------------------------------------
 Run Fast Api
     fastapi dev src/api/main.py
