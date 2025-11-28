@@ -27,9 +27,9 @@ def retrieve_company(company_id: int, db: Session = Depends(get_db)):
     return db_company
 
 '''
-@rules_router.get("")
-def list_companies(db: Session = Depends(get_db)):
-    """List all companies."""
-    companies = db.query(CompanyRuleTable).all()
-    return companies
+@rules_router.get("/{company_id}")
+def list_companies(company_id: int):
+    print(f"Storing rules for company ID: {company_id}")
+    companyRuleEmbedding = CompanyRuleEmbedding(company_id)
+    return companyRuleEmbedding.search_rules(return_all=True, k=100,include_embeddings=True)
 

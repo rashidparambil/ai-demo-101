@@ -59,6 +59,28 @@ class CompanyRuleEmbedding:
             logger.error(f"Database connection error: {str(e)}")
             raise
 
+    def _parse_embedding(self, embedding_str: str) -> list:
+        """
+        Parse pgvector embedding string format to list of floats.
+
+        pgvector stores as: "[0.1,0.2,0.3,...]"
+
+        Args:
+            embedding_str: String representation from pgvector
+
+        Returns:
+            List of floats
+        """
+        try:
+            # pgvector returns as string like "[0.123, 0.456, ...]"
+            # Remove brackets and split by comma
+            embedding_str = embedding_str.strip('[]')
+            embedding_list = [float(x.strip()) for x in embedding_str.split(',')]
+            return embedding_list
+        except Exception as e:
+            logger.error(f"Error parsing embedding: {str(e)}")
+            return []
+
     def store_company_rules(self, rules: List[str]) -> Dict[str, Any]:
         """
         Store company rules with embeddings in the company_rule table.
@@ -133,83 +155,192 @@ class CompanyRuleEmbedding:
                 "company_id": self.company_id
             }
 
-    def search_rules(self, query: str, k: int = 3) -> Dict[str, Any]:
+    def search_rules(self, query: str = None, k: int = 3, return_all: bool = False, include_embeddings: bool = False) -> Dict[str, Any]:
         """
-        Search for similar rules using vector similarity (cosine distance).
-        
+        Search for similar rules or retrieve all rules for a company.
+
         Args:
-            query: Search query string
+            query: Search query string for semantic similarity (optional if return_all=True)
             k: Number of results to return (default: 3)
-        
+            return_all: If True, return all rules for the company (ignores query and k)
+            include_embeddings: If True, include embedding vectors in response (default: False)
+
         Returns:
             Dictionary with search results
         """
         try:
-            logger.info(f"Searching for rules with query: {query}")
-            
-            # Generate embedding for query
-            query_embedding = self.embeddings.embed_query(query)
-            
-            # Convert to list if needed
-            if hasattr(query_embedding, 'tolist'):
-                query_embedding = query_embedding.tolist()
-            elif not isinstance(query_embedding, list):
-                query_embedding = list(query_embedding)
-
-            # Connect to database
             conn = self._get_connection()
             cursor = conn.cursor()
 
-            # SQL query using pgvector cosine distance operator (<=>)
-            # <=> computes cosine distance (smaller = more similar)
-            sql = """
-                SELECT 
-                    id,
-                    company_id,
-                    rule_content,
-                    1 - (embedding <=> %s::vector) as similarity_score
-                FROM company_rule
-                WHERE company_id = %s
-                ORDER BY embedding <=> %s::vector
-                LIMIT %s
-            """
+            if return_all:
+                # Return all rules for the company
+                logger.info(f"Retrieving all rules for company {self.company_id}")
+                
+                # Build SQL based on whether embeddings are requested
+                if include_embeddings:
+                    sql = """
+                        SELECT 
+                            id,
+                            company_id,
+                            rule_content,
+                            embedding::text
+                        FROM company_rule
+                        WHERE company_id = %s
+                        ORDER BY id ASC
+                    """
+                else:
+                    sql = """
+                        SELECT 
+                            id,
+                            company_id,
+                            rule_content
+                        FROM company_rule
+                        WHERE company_id = %s
+                        ORDER BY id ASC
+                    """
+                
+                cursor.execute(sql, (self.company_id,))
+                results = cursor.fetchall()
 
-            cursor.execute(sql, (json.dumps(query_embedding), self.company_id, json.dumps(query_embedding), k))
-            results = cursor.fetchall()
+                cursor.close()
+                conn.close()
 
-            cursor.close()
-            conn.close()
+                if not results:
+                    logger.info(f"No rules found for company {self.company_id}")
+                    return {
+                        "success": True,
+                        "company_id": self.company_id,
+                        "results_count": 0,
+                        "results": []
+                    }
 
-            if not results:
-                logger.info(f"No similar rules found for query: {query}")
+                # Format results based on include_embeddings flag
+                if include_embeddings:
+                    formatted_results = [
+                        {
+                            "rule_id": row[0],
+                            "company_id": row[1],
+                            "rule_content": row[2],
+                            "embedding": self._parse_embedding(row[3])  # Convert pgvector string to list
+                        }
+                        for row in results
+                    ]
+                else:
+                    formatted_results = [
+                        {
+                            "rule_id": row[0],
+                            "company_id": row[1],
+                            "rule_content": row[2]
+                        }
+                        for row in results
+                    ]
+
+                logger.info(f"Retrieved {len(formatted_results)} rules for company {self.company_id}")
+
+                return {
+                    "success": True,
+                    "company_id": self.company_id,
+                    "include_embeddings": include_embeddings,
+                    "results_count": len(formatted_results),
+                    "results": formatted_results
+                }
+
+            else:
+                # Semantic search based on query
+                if not query:
+                    return {
+                        "success": False,
+                        "error": "Query is required when return_all=False",
+                        "company_id": self.company_id
+                    }
+
+                logger.info(f"Searching for rules with query: {query}")
+                
+                # Generate embedding for query
+                query_embedding = self.embeddings.embed_query(query)
+                
+                # Convert to list if needed
+                if hasattr(query_embedding, 'tolist'):
+                    query_embedding = query_embedding.tolist()
+                elif not isinstance(query_embedding, list):
+                    query_embedding = list(query_embedding)
+
+                # Build SQL based on whether embeddings are requested
+                if include_embeddings:
+                    sql = """
+                        SELECT 
+                            id,
+                            company_id,
+                            rule_content,
+                            embedding::text,
+                            1 - (embedding <=> %s::vector) as similarity_score
+                        FROM company_rule
+                        WHERE company_id = %s
+                        ORDER BY embedding <=> %s::vector
+                        LIMIT %s
+                    """
+                else:
+                    sql = """
+                        SELECT 
+                            id,
+                            company_id,
+                            rule_content,
+                            1 - (embedding <=> %s::vector) as similarity_score
+                        FROM company_rule
+                        WHERE company_id = %s
+                        ORDER BY embedding <=> %s::vector
+                        LIMIT %s
+                    """
+
+                cursor.execute(sql, (json.dumps(query_embedding), self.company_id, json.dumps(query_embedding), k))
+                results = cursor.fetchall()
+
+                cursor.close()
+                conn.close()
+
+                if not results:
+                    logger.info(f"No similar rules found for query: {query}")
+                    return {
+                        "success": True,
+                        "query": query,
+                        "company_id": self.company_id,
+                        "results_count": 0,
+                        "results": []
+                    }
+
+                # Format results with similarity scores and optional embeddings
+                if include_embeddings:
+                    formatted_results = [
+                        {
+                            "rule_id": row[0],
+                            "company_id": row[1],
+                            "rule_content": row[2],
+                            "embedding": self._parse_embedding(row[3]),
+                            "similarity_score": round(float(row[4]), 4)
+                        }
+                        for row in results
+                    ]
+                else:
+                    formatted_results = [
+                        {
+                            "rule_id": row[0],
+                            "company_id": row[1],
+                            "rule_content": row[2],
+                            "similarity_score": round(float(row[3]), 4)
+                        }
+                        for row in results
+                    ]
+
+                logger.info(f"Found {len(formatted_results)} similar rules for query: {query}")
+
                 return {
                     "success": True,
                     "query": query,
                     "company_id": self.company_id,
-                    "results_count": 0,
-                    "results": []
+                    "include_embeddings": include_embeddings,
+                    "results_count": len(formatted_results),
+                    "results": formatted_results
                 }
-
-            # Format results
-            formatted_results = [
-                {
-                    "rule_id": row[0],
-                    "company_id": row[1],
-                    "rule_content": row[2],
-                    "similarity_score": round(float(row[3]), 4)
-                }
-                for row in results
-            ]
-
-            logger.info(f"Found {len(formatted_results)} similar rules")
-
-            return {
-                "success": True,
-                "query": query,
-                "company_id": self.company_id,
-                "results_count": len(formatted_results),
-                "results": formatted_results
-            }
 
         except Exception as e:
             logger.error(f"Error searching rules: {str(e)}")
