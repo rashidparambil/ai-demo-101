@@ -21,6 +21,10 @@ Vector Embeding
 pip install langchain langchain-google-genai langchain-postgres psycopg2-binary
 
 
+mcp
+pip install mcp langchain-mcp-adapters langchain psycopg2-binary python-dotenv requests
+
+
 #-----------------------------------------
 Run Fast Api
     fastapi dev src/api/main.py
