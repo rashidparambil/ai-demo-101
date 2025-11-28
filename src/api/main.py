@@ -17,9 +17,11 @@ class MailRequest(BaseModel):
     subject: str
     content: str
 
+# Create Extract instance once (lightweight, no MCP session)
+extractor = Extract()
 
 @app.post("/process")
-def read_item(request: MailRequest):
-    pro = Extract()
-    response = pro.process(request.content)
+async def read_item(request: MailRequest):
+    response = await extractor.process(request.content)
     return {"response": response }
+
