@@ -18,13 +18,13 @@ class Extract:
         
         self.system_message = '''You are a helpful assistant that extract Customer Name,
                                  Customer Account, Amount Paid, Balance Amount form the message and return as a object or list of objects. 
-                                 verify the company that is provided in first row in user query by calling `find_company(name=...) and return company name nad company Id. provide not found error if not able to find`. 
+                                 verify the client that is provided in first row in user query by calling `find_client(name=...) and return Client name nad Client Id. provide not found error if not able to find`. 
                                  Use format_account_number and check_minium_amount tools to support this task'''
      
     async def process(self, message: str):
         """Create agent with fresh MCP session for this request."""
         mcp_servers = {
-            "company_mcp": {
+            "client_mcp": {
                 "transport": "streamable_http",
                 "url": self.MCP_SERVER_URL
             }
@@ -33,7 +33,7 @@ class Extract:
         client = MultiServerMCPClient(mcp_servers)
         
         # Create fresh session for this request
-        async with client.session("company_mcp") as session:
+        async with client.session("client_mcp") as session:
             mcptools = await load_mcp_tools(session)
 
             combined_tools = [format_account_number, check_minium_amount] + mcptools

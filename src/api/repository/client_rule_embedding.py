@@ -13,15 +13,15 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-class CompanyRuleEmbedding:
-    def __init__(self, company_id: int):
+class ClientRuleEmbedding:
+    def __init__(self, client_id: int):
         """
-        Initialize the embedding service for company rules.
+        Initialize the embedding service for client rules.
         
         Args:
-            company_id: Integer ID of the company
+            client_id: Integer ID of the client
         """
-        self.company_id = company_id
+        self.client_id = client_id
 
         # Load environment variables
         load_dotenv()
@@ -81,9 +81,9 @@ class CompanyRuleEmbedding:
             logger.error(f"Error parsing embedding: {str(e)}")
             return []
 
-    def store_company_rules(self, rules: List[str]) -> Dict[str, Any]:
+    def store_client_rules(self, rules: List[str]) -> Dict[str, Any]:
         """
-        Store company rules with embeddings in the company_rule table.
+        Store client rules with embeddings in the client_rule table.
         
         Args:
             rules: List of rule strings to store
@@ -92,7 +92,7 @@ class CompanyRuleEmbedding:
             Dictionary with status and result information
         """
         if not rules:
-            logger.warning(f"No rules to store for company {self.company_id}")
+            logger.warning(f"No rules to store for client {self.client_id}")
             return {
                 "success": False,
                 "error": "No rules provided"
@@ -120,13 +120,13 @@ class CompanyRuleEmbedding:
             # Prepare data for batch insert
             # pgvector expects format: [0.1, 0.2, ..., 0.768]
             data = [
-                (self.company_id, rule, emb)
+                (self.client_id, rule, emb)
                 for rule, emb in zip(rules, embeddings)
             ]
 
-            # SQL to insert into company_rule table
+            # SQL to insert into client_rule table
             sql = """
-                INSERT INTO company_rule (company_id, rule_content, embedding)
+                INSERT INTO client_rule (client_id, rule_content, embedding)
                 VALUES (%s, %s, %s::vector)
             """
 
@@ -136,14 +136,14 @@ class CompanyRuleEmbedding:
             
             conn.commit()
             
-            logger.info(f"✓ Successfully stored {len(data)} rules for company {self.company_id}")
+            logger.info(f"✓ Successfully stored {len(data)} rules for client {self.client_id}")
             
             cursor.close()
             conn.close()
             
             return {
                 "success": True,
-                "company_id": self.company_id,
+                "client_id": self.client_id,
                 "rules_stored": len(data)
             }
 
@@ -152,17 +152,17 @@ class CompanyRuleEmbedding:
             return {
                 "success": False,
                 "error": str(e),
-                "company_id": self.company_id
+                "client_id": self.client_id
             }
 
     def search_rules(self, query: str = None, k: int = 3, return_all: bool = False, include_embeddings: bool = False) -> Dict[str, Any]:
         """
-        Search for similar rules or retrieve all rules for a company.
+        Search for similar rules or retrieve all rules for a client.
 
         Args:
             query: Search query string for semantic similarity (optional if return_all=True)
             k: Number of results to return (default: 3)
-            return_all: If True, return all rules for the company (ignores query and k)
+            return_all: If True, return all rules for the client (ignores query and k)
             include_embeddings: If True, include embedding vectors in response (default: False)
 
         Returns:
@@ -173,43 +173,43 @@ class CompanyRuleEmbedding:
             cursor = conn.cursor()
 
             if return_all:
-                # Return all rules for the company
-                logger.info(f"Retrieving all rules for company {self.company_id}")
+                # Return all rules for the client
+                logger.info(f"Retrieving all rules for client {self.client_id}")
                 
                 # Build SQL based on whether embeddings are requested
                 if include_embeddings:
                     sql = """
                         SELECT 
                             id,
-                            company_id,
+                            client_id,
                             rule_content,
                             embedding::text
-                        FROM company_rule
-                        WHERE company_id = %s
+                        FROM client_rule
+                        WHERE client_id = %s
                         ORDER BY id ASC
                     """
                 else:
                     sql = """
                         SELECT 
                             id,
-                            company_id,
+                            client_id,
                             rule_content
-                        FROM company_rule
-                        WHERE company_id = %s
+                        FROM client_rule
+                        WHERE client_id = %s
                         ORDER BY id ASC
                     """
                 
-                cursor.execute(sql, (self.company_id,))
+                cursor.execute(sql, (self.client_id,))
                 results = cursor.fetchall()
 
                 cursor.close()
                 conn.close()
 
                 if not results:
-                    logger.info(f"No rules found for company {self.company_id}")
+                    logger.info(f"No rules found for client {self.client_id}")
                     return {
                         "success": True,
-                        "company_id": self.company_id,
+                        "client_id": self.client_id,
                         "results_count": 0,
                         "results": []
                     }
@@ -219,7 +219,7 @@ class CompanyRuleEmbedding:
                     formatted_results = [
                         {
                             "rule_id": row[0],
-                            "company_id": row[1],
+                            "client_id": row[1],
                             "rule_content": row[2],
                             "embedding": self._parse_embedding(row[3])  # Convert pgvector string to list
                         }
@@ -229,17 +229,17 @@ class CompanyRuleEmbedding:
                     formatted_results = [
                         {
                             "rule_id": row[0],
-                            "company_id": row[1],
+                            "client_id": row[1],
                             "rule_content": row[2]
                         }
                         for row in results
                     ]
 
-                logger.info(f"Retrieved {len(formatted_results)} rules for company {self.company_id}")
+                logger.info(f"Retrieved {len(formatted_results)} rules for client {self.client_id}")
 
                 return {
                     "success": True,
-                    "company_id": self.company_id,
+                    "client_id": self.client_id,
                     "include_embeddings": include_embeddings,
                     "results_count": len(formatted_results),
                     "results": formatted_results
@@ -251,7 +251,7 @@ class CompanyRuleEmbedding:
                     return {
                         "success": False,
                         "error": "Query is required when return_all=False",
-                        "company_id": self.company_id
+                        "client_id": self.client_id
                     }
 
                 logger.info(f"Searching for rules with query: {query}")
@@ -270,12 +270,12 @@ class CompanyRuleEmbedding:
                     sql = """
                         SELECT 
                             id,
-                            company_id,
+                            client_id,
                             rule_content,
                             embedding::text,
                             1 - (embedding <=> %s::vector) as similarity_score
-                        FROM company_rule
-                        WHERE company_id = %s
+                        FROM client_rule
+                        WHERE client_id = %s
                         ORDER BY embedding <=> %s::vector
                         LIMIT %s
                     """
@@ -283,16 +283,16 @@ class CompanyRuleEmbedding:
                     sql = """
                         SELECT 
                             id,
-                            company_id,
+                            client_id,
                             rule_content,
                             1 - (embedding <=> %s::vector) as similarity_score
-                        FROM company_rule
-                        WHERE company_id = %s
+                        FROM client_rule
+                        WHERE client_id = %s
                         ORDER BY embedding <=> %s::vector
                         LIMIT %s
                     """
 
-                cursor.execute(sql, (json.dumps(query_embedding), self.company_id, json.dumps(query_embedding), k))
+                cursor.execute(sql, (json.dumps(query_embedding), self.client_id, json.dumps(query_embedding), k))
                 results = cursor.fetchall()
 
                 cursor.close()
@@ -303,7 +303,7 @@ class CompanyRuleEmbedding:
                     return {
                         "success": True,
                         "query": query,
-                        "company_id": self.company_id,
+                        "client_id": self.client_id,
                         "results_count": 0,
                         "results": []
                     }
@@ -313,7 +313,7 @@ class CompanyRuleEmbedding:
                     formatted_results = [
                         {
                             "rule_id": row[0],
-                            "company_id": row[1],
+                            "client_id": row[1],
                             "rule_content": row[2],
                             "embedding": self._parse_embedding(row[3]),
                             "similarity_score": round(float(row[4]), 4)
@@ -324,7 +324,7 @@ class CompanyRuleEmbedding:
                     formatted_results = [
                         {
                             "rule_id": row[0],
-                            "company_id": row[1],
+                            "client_id": row[1],
                             "rule_content": row[2],
                             "similarity_score": round(float(row[3]), 4)
                         }
@@ -336,7 +336,7 @@ class CompanyRuleEmbedding:
                 return {
                     "success": True,
                     "query": query,
-                    "company_id": self.company_id,
+                    "client_id": self.client_id,
                     "include_embeddings": include_embeddings,
                     "results_count": len(formatted_results),
                     "results": formatted_results
@@ -347,12 +347,12 @@ class CompanyRuleEmbedding:
             return {
                 "success": False,
                 "error": str(e),
-                "company_id": self.company_id
+                "client_id": self.client_id
             }
 
-    def delete_company_rules(self) -> Dict[str, Any]:
+    def delete_client_rules(self) -> Dict[str, Any]:
         """
-        Delete all rules for a company (useful for updates).
+        Delete all rules for a client (useful for updates).
         
         Returns:
             Dictionary with status
@@ -361,8 +361,8 @@ class CompanyRuleEmbedding:
             conn = self._get_connection()
             cursor = conn.cursor()
 
-            sql = "DELETE FROM company_rule WHERE company_id = %s"
-            cursor.execute(sql, (self.company_id,))
+            sql = "DELETE FROM client_rule WHERE client_id = %s"
+            cursor.execute(sql, (self.client_id,))
             
             deleted_count = cursor.rowcount
             conn.commit()
@@ -370,11 +370,11 @@ class CompanyRuleEmbedding:
             cursor.close()
             conn.close()
 
-            logger.info(f"Deleted {deleted_count} rules for company {self.company_id}")
+            logger.info(f"Deleted {deleted_count} rules for client {self.client_id}")
 
             return {
                 "success": True,
-                "company_id": self.company_id,
+                "client_id": self.client_id,
                 "rules_deleted": deleted_count
             }
 
