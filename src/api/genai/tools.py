@@ -5,14 +5,14 @@ from langchain.messages import ToolMessage
 @tool
 def format_account_number(account_number: str, client: str) -> str:
     """Format account number for client ABC"""
-    if client == 'ABC':
+    if client == 'Jio Mobile':
         return account_number[:3] + '-' + account_number[3:]
     return account_number
 
 @tool
 def check_minium_amount(amount_paid: float, client: str) -> bool:
     """Check minium amount for client ABC"""
-    if client == 'ABC' and amount_paid < 10:
+    if client == 'Jio Mobile' and amount_paid < 50:
         return False
     return True
 

@@ -2,11 +2,9 @@ from sqlalchemy import Column, ForeignKey, Integer, String
 from .database import Base
 from pgvector.sqlalchemy import Vector
 
-
-
-class CompanyTable(Base):
-    """SQLAlchemy ORM model for the companies table."""
-    __tablename__ = "company"
+class ClientTable(Base):
+    """SQLAlchemy ORM model for the client table."""
+    __tablename__ = "client"
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(255), nullable=False, index=True)
@@ -14,11 +12,11 @@ class CompanyTable(Base):
     #email = Column(String(255), nullable=True)
     #phone = Column(String(20), nullable=True)
 
-class CompanyRuleTable:
-    """SQLAlchemy ORM model for the companies table."""
-    __tablename__ = "company_rule"
+class ClientRuleTable:
+    """SQLAlchemy ORM model for the client_rule table."""
+    __tablename__ = "client_rule"
 
     id = Column(Integer, primary_key=True, index=True)
-    company_id = Column(Integer, ForeignKey('company.id'))
+    client_id = Column(Integer, ForeignKey('client.id'))
     rule_content = Column(String(255), nullable=False)
     embeddings = Column(Vector(3072), nullable=True)
