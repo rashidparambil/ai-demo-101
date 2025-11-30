@@ -1,0 +1,30 @@
+steps:
+# Step 1: Build the container image and tag it with the commit SHA
+- name: 'gcr.io/cloud-builders/docker'
+  id: 'Build'
+  args: ['build', '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/MCP-Server-1:$COMMIT_SHA', '.']
+
+# Step 2: Push the image to Artifact Registry
+- name: 'gcr.io/cloud-builders/docker'
+  id: 'Push'
+  args: ['push', 'us-central1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/MCP-Server-1:$COMMIT_SHA']
+
+# Step 3: Deploy the image to Cloud Run
+- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+  id: 'Deploy'
+  entrypoint: gcloud
+  args:
+  - 'run'
+  - 'deploy'
+  - 'MCP-Server-1' # Replace with your desired service name
+  - '--image'
+  - 'us-central1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/MCP-Server-1:$COMMIT_SHA'
+  - '--region'
+  - 'us-central1' # Replace with your desired region
+  - '--platform'
+  - 'managed'
+  - '--allow-unauthenticated' # Set to --no-allow-unauthenticated for private service
+
+# Store the built image in Artifact Registry (using a repository named 'cloud-run-source-deploy')
+images:
+- 'us-central1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/MCP-Server-1:$COMMIT_SHA'
