@@ -4,6 +4,7 @@ import os
 import logging
 from dotenv import load_dotenv
 import uvicorn
+from repository.client_rule_embedding import ClientRuleEmbedding
 
 # mcp provides a simple way to expose tools
 from mcp.server.fastmcp import FastMCP
@@ -63,6 +64,24 @@ def find_client(name: str) -> dict:
     except Exception as e:
         logger.exception("DB lookup failed")
         raise e  # MCP will return tool error to caller
+    
+@mcp.tool("find_all_client_rule_by_client_id", description="Find client rules by client Id. Args: {client_id: int}")
+def find_all_client_rule_by_client_id(client_id: int) -> dict:
+    """
+    Find a client rule by client_id.
+    Returns: [{"id": int, "rule_content": str, "score": float}] or raise if not found.
+    """
+    print(f"**************************************Finding client rule by client Id: {client_id}*************") 
+    # Basic normalization + simple LIKE search; replace with your fuzzy logic if desired
+    try:
+        clientRuleEmbedding = ClientRuleEmbedding(client_id)
+        return clientRuleEmbedding.search_rules(return_all=True, k=100,include_embeddings=False)
+
+    except Exception as e:
+        logger.exception("DB client rule lookup failed")
+        raise e  # MCP will return tool error to caller
+
+
 
 
 if __name__ == "__main__":
