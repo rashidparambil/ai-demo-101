@@ -35,8 +35,14 @@ Please initiate processing of following from ABC Company.\nABC Company\nJohn Doe
 
 
 {
-  "from_address": "test@abc-company.com",
-  "subject": "Initiate Processing",
+  "from_address": "test@jio-mobile-test.com",
+  "subject": "Placement Processing",
   "content": "Please initiate processing of following from Jio Mobile.\nJio Mobile\nJohn Doe, 12064654654, 50, 150, 12/12/2025\nRobert T, 12064654678, 70, 300, 12/12/2025\nDavid  B, 12064657988, 9, 251, 12/12/2025\n3"
 }
 
+
+{
+  "from_address": "test@ai-notts-test.com",
+  "subject": "Placement Processing",
+  "content": "Please initiate processing of following from Ai Notts.\nAi Notts\nJohn Doe, 12064& 654654, 50, 150, 12/12/2025\nRobert T, 0987654328777, 9, 300, 12/12/2025\nDavid  B, 12064657988, 9, 251, 12/12/2025\n3"
+}

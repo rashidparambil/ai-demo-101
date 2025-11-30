@@ -11,7 +11,7 @@ rules_router = APIRouter(prefix="/client_rule", tags=["client_rule"])
 def save_client_rule(clientRule: ClientRules, client_id: int):
     print(f"Storing rules for client ID: {client_id}")
     clientRuleEmbedding = ClientRuleEmbedding(client_id)
-    clientRuleEmbedding.store_client_rules(clientRule.rules)
+    clientRuleEmbedding.store_client_rules(clientRule.process_type, clientRule.rules)
     return "Client rules stored successfully."
 
 @rules_router.get("/{client_id}")

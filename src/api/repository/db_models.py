@@ -19,4 +19,5 @@ class ClientRuleTable:
     id = Column(Integer, primary_key=True, index=True)
     client_id = Column(Integer, ForeignKey('client.id'))
     rule_content = Column(String(255), nullable=False)
+    process_type = Column(Integer, nullable=False),
     embeddings = Column(Vector(3072), nullable=True)

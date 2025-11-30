@@ -8,6 +8,8 @@ from psycopg2.extras import execute_batch
 from psycopg2.extensions import register_adapter
 import json
 
+from repository.process_type import ProcessType
+
 # Setup logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -81,7 +83,7 @@ class ClientRuleEmbedding:
             logger.error(f"Error parsing embedding: {str(e)}")
             return []
 
-    def store_client_rules(self, rules: List[str]) -> Dict[str, Any]:
+    def store_client_rules(self, process_type: ProcessType, rules: List[str]) -> Dict[str, Any]:
         """
         Store client rules with embeddings in the client_rule table.
         
@@ -120,14 +122,14 @@ class ClientRuleEmbedding:
             # Prepare data for batch insert
             # pgvector expects format: [0.1, 0.2, ..., 0.768]
             data = [
-                (self.client_id, rule, emb)
+                (self.client_id, rule, process_type.value, emb)
                 for rule, emb in zip(rules, embeddings)
             ]
 
             # SQL to insert into client_rule table
             sql = """
-                INSERT INTO client_rule (client_id, rule_content, embedding)
-                VALUES (%s, %s, %s::vector)
+                INSERT INTO client_rule (client_id, rule_content, process_type, embedding)
+                VALUES (%s, %s, %s, %s::vector)
             """
 
             # Execute batch insert
@@ -155,11 +157,12 @@ class ClientRuleEmbedding:
                 "client_id": self.client_id
             }
 
-    def search_rules(self, query: str = None, k: int = 3, return_all: bool = False, include_embeddings: bool = False) -> Dict[str, Any]:
+    def search_rules(self,process_type: ProcessType, query: str = None, k: int = 3, return_all: bool = False, include_embeddings: bool = False) -> Dict[str, Any]:
         """
         Search for similar rules or retrieve all rules for a client.
 
         Args:
+            process_type: ProcessType enum value to filter rules by process type
             query: Search query string for semantic similarity (optional if return_all=True)
             k: Number of results to return (default: 3)
             return_all: If True, return all rules for the client (ignores query and k)
@@ -182,10 +185,12 @@ class ClientRuleEmbedding:
                         SELECT 
                             id,
                             client_id,
+                            process_type,
                             rule_content,
+                            is_auto_apply,
                             embedding::text
                         FROM client_rule
-                        WHERE client_id = %s
+                        WHERE client_id = %s and process_type = %s
                         ORDER BY id ASC
                     """
                 else:
@@ -193,13 +198,15 @@ class ClientRuleEmbedding:
                         SELECT 
                             id,
                             client_id,
-                            rule_content
+                            process_type,
+                            rule_content,
+                            is_auto_apply
                         FROM client_rule
-                        WHERE client_id = %s
+                        WHERE client_id = %s and process_type = %s
                         ORDER BY id ASC
                     """
                 
-                cursor.execute(sql, (self.client_id,))
+                cursor.execute(sql, (self.client_id,process_type))
                 results = cursor.fetchall()
 
                 cursor.close()
@@ -220,8 +227,10 @@ class ClientRuleEmbedding:
                         {
                             "rule_id": row[0],
                             "client_id": row[1],
-                            "rule_content": row[2],
-                            "embedding": self._parse_embedding(row[3])  # Convert pgvector string to list
+                            "process_type": ProcessType(row[2]).name,
+                            "rule_content": row[3],
+                            "is_auto_apply": row[4],
+                            "embedding": self._parse_embedding(row[5])  # Convert pgvector string to list
                         }
                         for row in results
                     ]
@@ -230,7 +239,9 @@ class ClientRuleEmbedding:
                         {
                             "rule_id": row[0],
                             "client_id": row[1],
-                            "rule_content": row[2]
+                            "process_type": ProcessType(row[2]).name,
+                            "rule_content": row[3],
+                            "is_auto_apply": row[4]
                         }
                         for row in results
                     ]
@@ -271,11 +282,13 @@ class ClientRuleEmbedding:
                         SELECT 
                             id,
                             client_id,
+                            process_type,
                             rule_content,
+                            is_auto_apply,
                             embedding::text,
                             1 - (embedding <=> %s::vector) as similarity_score
                         FROM client_rule
-                        WHERE client_id = %s
+                        WHERE client_id = %s and process_type = %s
                         ORDER BY embedding <=> %s::vector
                         LIMIT %s
                     """
@@ -284,10 +297,12 @@ class ClientRuleEmbedding:
                         SELECT 
                             id,
                             client_id,
+                            process_type,
                             rule_content,
+                            is_auto_apply,
                             1 - (embedding <=> %s::vector) as similarity_score
                         FROM client_rule
-                        WHERE client_id = %s
+                        WHERE client_id = %s and process_type = %s
                         ORDER BY embedding <=> %s::vector
                         LIMIT %s
                     """
@@ -314,9 +329,11 @@ class ClientRuleEmbedding:
                         {
                             "rule_id": row[0],
                             "client_id": row[1],
-                            "rule_content": row[2],
-                            "embedding": self._parse_embedding(row[3]),
-                            "similarity_score": round(float(row[4]), 4)
+                            "process_type": ProcessType(row[2]).name,
+                            "rule_content": row[3],
+                            "is_auto_apply": row[4],
+                            "embedding": self._parse_embedding(row[5]),
+                            "similarity_score": round(float(row[6]), 4)
                         }
                         for row in results
                     ]
@@ -325,8 +342,10 @@ class ClientRuleEmbedding:
                         {
                             "rule_id": row[0],
                             "client_id": row[1],
-                            "rule_content": row[2],
-                            "similarity_score": round(float(row[3]), 4)
+                            "process_type": ProcessType(row[2]).name,
+                            "rule_content": row[3],
+                            "is_auto_apply": row[4],
+                            "similarity_score": round(float(row[4]), 4)
                         }
                         for row in results
                     ]
