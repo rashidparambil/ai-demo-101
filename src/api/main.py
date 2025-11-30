@@ -1,19 +1,24 @@
 #from typing import Union
 
 from fastapi import FastAPI
-from pydantic import BaseModel
 from genai.extract import Extract
+from repository.routes import router as client_router
+from repository.client_rules import rules_router
+from repository.models import MailRequest
 
 app = FastAPI()
 
-class MailRequest(BaseModel):
-    from_address: str
-    subject: str
-    content: str
+# Register the client router
+app.include_router(client_router)
+app.include_router(rules_router)
 
+
+
+# Create Extract instance once (lightweight, no MCP session)
+extractor = Extract()
 
 @app.post("/process")
-def read_item(request: MailRequest):
-    pro = Extract()
-    response = pro.process(request.content)
-    return {"response": response.content }
+async def read_item(request: MailRequest):
+    response = await extractor.process(f"subject={request.subject}\n contnet={request.content}")
+    return {"response": response }
+
