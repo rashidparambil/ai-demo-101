@@ -21,12 +21,13 @@ class Extract:
 
         **MANDATORY WORKFLOW:**
         1. **Client Verification (REQUIRED):**
-        - Extract the client name from the user message
+        - Identify and Extract ProcessType form subject
+        - Extract the client name from the user message probably from the first row
         - Call `find_client(name=...)` to verify the client exists
         - If client not found, STOP and return error
 
         2. **Rule Retrieval (REQUIRED - DO NOT SKIP):**
-        - After client is verified, IMMEDIATELY call `find_all_client_rule_by_client_id(client_id=...)` with the returned client_id
+        - After client is verified, IMMEDIATELY call `find_all_client_rule_by_client_id(client_id=..., process_type=...)` with the returned client_id
         - This is MANDATORY before any other processing
 
         3. **Data Extraction:**

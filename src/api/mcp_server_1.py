@@ -66,7 +66,7 @@ def find_client(name: str) -> dict:
         raise e  # MCP will return tool error to caller
     
 @mcp.tool("find_all_client_rule_by_client_id", description="Find client rules by client Id. Args: {client_id: int}")
-def find_all_client_rule_by_client_id(client_id: int) -> dict:
+def find_all_client_rule_by_client_id(client_id: int, process_type: int) -> dict:
     """
     Find a client rule by client_id.
     Returns: [{"id": int, "rule_content": str, "score": float}] or raise if not found.
@@ -75,7 +75,22 @@ def find_all_client_rule_by_client_id(client_id: int) -> dict:
     # Basic normalization + simple LIKE search; replace with your fuzzy logic if desired
     try:
         clientRuleEmbedding = ClientRuleEmbedding(client_id)
-        return clientRuleEmbedding.search_rules(return_all=True, k=100,include_embeddings=False)
+        data = clientRuleEmbedding.search_rules(return_all=True, k=100,include_embeddings=False)
+        # 2. Filter the 'results' list
+        filtered_results = [
+            item for item in data['results'] 
+            if item['process_type'] == 'Placement'
+        ]
+
+        # 3. (Optional) Create a new dictionary with the filtered results
+        filtered_data = {
+            "success": True,
+            "client_id": data['client_id'],
+            "include_embeddings": data['include_embeddings'],
+            "results_count": len(filtered_results), # Update the count
+            "results": filtered_results
+        }
+        return filtered_data
 
     except Exception as e:
         logger.exception("DB client rule lookup failed")

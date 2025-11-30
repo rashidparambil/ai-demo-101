@@ -10,11 +10,12 @@ def format_account_number(account_number: str, client: str) -> str:
     return account_number
 
 @tool
-def check_minium_amount(amount_paid: float, client: str) -> bool:
-    """Check minium amount for client ABC"""
-    if client == 'Jio Mobile' and amount_paid < 50:
-        return False
-    return True
+def check_minium_amount(amount_paid: float, minum_amount: float, content_rule: str) -> bool:
+    """Check minium amount for client"""
+    print(f"content_rule: {content_rule}, minum_amount: {minum_amount}")
+    if(minum_amount == 0):
+        return True
+    return amount_paid < minum_amount
 
 @wrap_tool_call
 def handle_tool_errors(request, handler):
