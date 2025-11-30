@@ -1,21 +1,32 @@
 from langchain.tools import tool
 from langchain.agents.middleware import wrap_tool_call
 from langchain.messages import ToolMessage
+import re
 
 @tool
-def format_account_number(account_number: str, client: str) -> str:
-    """Format account number for client ABC"""
-    if client == 'Jio Mobile':
-        return account_number[:3] + '-' + account_number[3:]
+def remove_space_sepcial_chars_from_account_number(account_number: str, is_auto_apply: bool, client_rule: str) -> str:
+    """Format account number for client"""
+    print(f"content_rule: {client_rule}, is_auto_apply: {is_auto_apply}")
+    if (is_auto_apply == False):
+        return re.sub('[^A-Za-z0-9]+','', account_number)
     return account_number
 
 @tool
-def check_minium_amount(amount_paid: float, minum_amount: float, content_rule: str) -> bool:
+def check_minium_amount(amount_paid: float, minimum_amount: float, client_rule: str) -> bool:
     """Check minium amount for client"""
-    print(f"content_rule: {content_rule}, minum_amount: {minum_amount}")
-    if(minum_amount == 0):
+    print(f"content_rule: {client_rule}, minum_amount: {minimum_amount}")
+    if(minimum_amount == 0):
         return True
-    return amount_paid < minum_amount
+    return amount_paid < minimum_amount
+
+@tool
+def check_negative_balance_amount(amount_paid: float, balance_amount: float, is_auto_apply: bool, client_rule: str) -> bool:
+    """Check minium amount for client"""
+    print(f"content_rule: {client_rule}, amount_paid: {amount_paid}")
+    if (is_auto_apply == False) and ((balance_amount - amount_paid) < 0):
+        return False
+    return True
+
 
 
 @tool("validate_subject", description="Validate and identify the process type from the subject line. Args: {subject: str}")

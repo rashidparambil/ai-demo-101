@@ -5,7 +5,7 @@ import json
 
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.agents import create_agent
-from .tools import format_account_number, check_minium_amount, validate_subject
+from .tools import remove_space_sepcial_chars_from_account_number, check_negative_balance_amount, validate_subject
 from repository.models import MailRequest
 
 from langchain_mcp_adapters.client import MultiServerMCPClient
@@ -44,22 +44,26 @@ class Extract:
    
                 For EVERY field in that record (customer_name, customer_account, amount_paid, balance_amount):
                 
-                    a) Find all rules for that field from Step 3 where is_auto_apply is True. Do not apply other rules.
+                    a) Find all rules for that field from Step 3 where is_auto_apply is True. 
+
+                    b) Execute tools that match the rule where ia_auto_apply is False.
+
+                    c) Do not apply other rules except.
                     
-                    b) Apply rules IN THIS ORDER:
+                    d) Apply rules IN THIS ORDER:
                         - First: Apply all TRANSFORMATION rules (strip whitespace, format, etc.)
                         * Use transformed value for subsequent validations
                         - Then: Apply all VALIDATION rules (required, max_length, min_length, etc.)
                         * Use the transformed value to check validations
                     
-                    c) Document each rule:
+                    e) Document each rule:
                         - rule_id
                         - rule_type (required, strip, max_length, min_length, etc.)
                         - description
                         - status (pass, fail, applied, skipped, error)
                         - additional details (length, max_length, min_length, error message, etc.)
                     
-                    d) Use the TRANSFORMED value as the final field value in extracted_fields
+                    f) Use the TRANSFORMED value as the final field value in extracted_fields
                             
 
             **Final Output:**
@@ -140,7 +144,7 @@ class Extract:
         async with client.session("client_mcp") as session:
             mcptools = await load_mcp_tools(session)
 
-            combined_tools = [format_account_number, check_minium_amount, validate_subject] + mcptools
+            combined_tools = [remove_space_sepcial_chars_from_account_number, check_negative_balance_amount, validate_subject] + mcptools
 
             llm = ChatGoogleGenerativeAI(
                 model="gemini-2.5-flash",
