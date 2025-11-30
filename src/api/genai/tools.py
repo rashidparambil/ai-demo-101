@@ -17,6 +17,39 @@ def check_minium_amount(amount_paid: float, minum_amount: float, content_rule: s
         return True
     return amount_paid < minum_amount
 
+
+@tool("validate_subject", description="Validate and identify the process type from the subject line. Args: {subject: str}")
+def validate_subject(subject: str) -> dict:
+    """
+    Validate and identify the process type from the subject line.
+    
+    Returns a dict with process_type (1 for Placement, 2 for Transaction) 
+    or an error if subject doesn't match required keywords.
+    
+    Args:
+        subject: The email subject line to validate
+    """
+    subject_lower = subject.lower()
+    
+    if "placement" in subject_lower:
+        return {
+            "valid": True,
+            "process_type": 1,
+            "message": f"Subject '{subject}' matched 'Placement', ProcessType set to 1"
+        }
+    elif "Transaction" in subject_lower:
+        return {
+            "valid": True,
+            "process_type": 2,
+            "message": f"Subject '{subject}' matched 'Transaction', ProcessType set to 2"
+        }
+    else:
+        return {
+            "valid": False,
+            "process_type": None,
+            "message": "ProcessType not identified from subject. Subject must contain 'Placement' or 'Transaction'."
+        }
+
 @wrap_tool_call
 def handle_tool_errors(request, handler):
     """Handle tool execution errors with custom messages."""

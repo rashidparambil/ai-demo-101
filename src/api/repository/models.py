@@ -12,3 +12,8 @@ class ClientRules(BaseModel):
     """Schema for a client including its ID (database response)."""
     rules: list[str]
     process_type: ProcessType
+
+class MailRequest(BaseModel):
+    from_address: str
+    subject: str
+    content: str    
