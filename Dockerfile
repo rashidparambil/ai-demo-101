@@ -2,7 +2,7 @@
 FROM python:3.11-slim
 
 # Define build args with defaults
-ARG APP_MODULE=api.main:app
+ARG APP_MODULE=api.mcp_server_1:app
 ARG PORT=8080
 
 # Export to ENV so runtime can use them
