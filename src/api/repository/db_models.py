@@ -1,5 +1,5 @@
 from sqlalchemy import Column, ForeignKey, Integer, String
-from .database import Base
+from api.repository.database import Base
 from pgvector.sqlalchemy import Vector
 
 class ClientTable(Base):

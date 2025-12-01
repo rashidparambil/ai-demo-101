@@ -5,8 +5,9 @@ import json
 
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.agents import create_agent
-from .tools import remove_space_sepcial_chars_from_account_number, check_negative_balance_amount, validate_subject
-from repository.models import MailRequest
+from api.genai.tools import remove_space_sepcial_chars_from_account_number, check_negative_balance_amount, validate_subject
+from api.repository.models import MailRequest
+from api.config import config
 
 from langchain_mcp_adapters.client import MultiServerMCPClient
 from langchain_mcp_adapters.tools import load_mcp_tools
@@ -14,9 +15,8 @@ from langchain_mcp_adapters.tools import load_mcp_tools
 class Extract:
     def __init__(self):
         """Initialize without creating MCP session (do it per-request instead)."""
-        load_dotenv()
-        self.MCP_SERVER_URL = os.getenv("MCP_SERVER_URL", "http://localhost:9000/mcp")
-        self.GOOGLE_API_KEY = os.getenv("google_api_key")
+        self.MCP_SERVER_URL = config.mcp_server_url
+        self.GOOGLE_API_KEY = config.google_api_key
         
         self.system_message = '''
             You are a highly efficient **Data Extraction and Validation Assistant** specializing in financial records.
