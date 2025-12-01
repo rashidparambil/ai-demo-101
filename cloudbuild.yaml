@@ -7,7 +7,7 @@ steps:
   args: 
     - 'build'
     - '-t'
-    - 'us-central1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/genAi-fast-api:$COMMIT_SHA'
+    - 'us-central1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/genai-fast-api:$COMMIT_SHA'
     - '--build-arg'
     - 'APP_MODULE=api.main:app'
     - '.'
@@ -15,7 +15,7 @@ steps:
 # Step 2: Push the image to Artifact Registry
 - name: 'gcr.io/cloud-builders/docker'
   id: 'Push'
-  args: ['push', 'us-central1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/genAi-fast-api:$COMMIT_SHA']
+  args: ['push', 'us-central1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/genai-fast-api:$COMMIT_SHA']
 
 # Step 3: Deploy the image to Cloud Run
 - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
@@ -24,9 +24,9 @@ steps:
   args:
     - 'run'
     - 'deploy'
-    - 'gen-fast-api' # Replace with your desired service name
+    - 'genai-fast-api' # Replace with your desired service name
     - '--image'
-    - 'us-central1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/genAi-fast-api:$COMMIT_SHA'
+    - 'us-central1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/genai-fast-api:$COMMIT_SHA'
     - '--region'
     - 'us-central1' # Replace with your desired region
     - '--platform'
@@ -37,4 +37,4 @@ steps:
 
 # Store the built image in Artifact Registry (using a repository named 'cloud-run-source-deploy')
 images:
-- 'us-central1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/genAi-fast-api:$COMMIT_SHA'
+- 'us-central1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/genai-fast-api:$COMMIT_SHA'
