@@ -35,7 +35,7 @@ steps:
   - 'managed'
   - '--allow-unauthenticated' # Set to --no-allow-unauthenticated for private service
   - '--set-secrets'
-  - 'APP_CONFIG=projects/$PROJECT_NUMBER/secrets/gen-ai-app-config-prd/latest:APP_CONFIG'
+  - 'APP_CONFIG=projects/$PROJECT_NUMBER/secrets/gen-ai-app-config-prd/versions/latest:APP_CONFIG'
 
 
 # Store the built image in Artifact Registry (using a repository named 'cloud-run-source-deploy')
