@@ -79,38 +79,29 @@ class Extract:
                         "customer_account": "FINAL_VALUE_AFTER_ALL_TRANSFORMATIONS",
                         "amount_paid": "FINAL_VALUE",
                         "balance_amount": "FINAL_VALUE",
-                        "field_validations": {
-                        "customer_name": {
-                            "rule_1": {
-                            "rule_id": 1,
-                            "rule_type": "strip",
-                            "description": "Remove leading/trailing whitespace",
-                            "status": "applied",
-                            "original_value": "  John Doe  ",
-                            "transformed_value": "John Doe"
+                        "transformtion_rules": [
+                            {
+                                "rule_id": RULE_ID,
+                                "description": "RULE_CONTENT",
+                                "status": "APPLIED|SKIPPED"
                             },
-                            "rule_2": {
-                            "rule_id": 2,
-                            "rule_type": "required",
-                            "description": "Customer name is required",
-                            "status": "pass",
-                            "value": "John Doe",
-                            "is_empty": false
+                            { ... next record ... }
+                        ],
+                        "validation_rules": [
+                            {
+                                "rule_id": RULE_ID,
+                                "rule_type": "RULE_CONTENT",
+                                "description": "Customer name is required",
+                                "status": "PASSED|FAILED"
                             },
-                            "rule_3": {
-                            "rule_id": 3,
-                            "rule_type": "max_length",
-                            "description": "Customer name max 100 characters",
-                            "status": "pass",
-                            "value": "John Doe",
-                            "actual_length": 8,
-                            "max_length": 100
-                            }
-                        },
-                        "customer_account": { ... },
-                        "amount_paid": { ... },
-                        "balance_amount": { ... }
-                        }
+                            { ... next record ... }
+                        ],
+                        "field_validations": [
+                            {
+                                "massage": "VALIDATION_FAILURE_MESSAGE"
+                            },
+                            { ... next record ... }
+                        ]
                     },
                     { ... next record ... }
                     ],
@@ -159,6 +150,6 @@ class Extract:
             result = await agent.ainvoke(
                 {"messages": [{"role": "user", "content": message}]}
             )
-            
-            return result
+            final_response = result["messages"][-1].content
+            return final_response
 
