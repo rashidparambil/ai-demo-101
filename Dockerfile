@@ -1,8 +1,14 @@
+# ...existing code...
 FROM python:3.11-slim
 
+# Accept build args with sensible defaults
+ARG APP_MODULE=api.main:app
+ARG PORT=8080
+
 ENV PYTHONUNBUFFERED=1 \
-    PIP_NO_CACHE_DIR=off 
-  
+    PIP_NO_CACHE_DIR=off \
+    APP_MODULE=${APP_MODULE} \
+    PORT=${PORT}
 
 WORKDIR /app
 
@@ -24,6 +30,9 @@ COPY src /app/src
 RUN useradd -m appuser && chown -R appuser /app
 USER appuser
 
+# Informational; Cloud Run sets PORT env at runtime (default 8080)
 EXPOSE 8080
 
-CMD ["sh", "-c", "uvicorn ${APP_MODULE} --host 0.0.0.0 --port 8080 --app-dir src"]
+# Use shell so runtime env vars (APP_MODULE, PORT) are respected by uvicorn
+CMD ["sh", "-c", "uvicorn ${APP_MODULE} --host 0.0.0.0 --port ${PORT} --app-dir src"]
+# ...existing code...
