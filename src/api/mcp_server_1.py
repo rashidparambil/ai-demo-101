@@ -41,9 +41,10 @@ def get_db_conn():
         cursor_factory=RealDictCursor
     )
 
-app = FastMCP()
+mcp = FastMCP()
+app = mcp.streamable_http_app()
 
-@app.tool("find_client", description="Find client by name. Args: {name: str}")
+@mcp.tool("find_client", description="Find client by name. Args: {name: str}")
 def find_client(name: str) -> dict:
     """
     Find a client by name.
@@ -74,7 +75,7 @@ def find_client(name: str) -> dict:
         logger.exception("DB lookup failed")
         raise e  # MCP will return tool error to caller
     
-@app.tool("find_all_client_rule_by_client_id_and_process_type", description="Find client rules by client Id. Args: {client_id: int, process_type: int}")
+@mcp.tool("find_all_client_rule_by_client_id_and_process_type", description="Find client rules by client Id. Args: {client_id: int, process_type: int}")
 def find_all_client_rule_by_client_id(client_id: int, process_type: int) -> dict:
     """
     Find a client rule by client_id.
