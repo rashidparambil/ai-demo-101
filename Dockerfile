@@ -24,6 +24,6 @@ COPY src /app/src
 RUN useradd -m appuser && chown -R appuser /app
 USER appuser
 
-EXPOSE ${PORT}
+EXPOSE 8080
 
-CMD ["sh", "-c", "uvicorn ${APP_MODULE} --host 0.0.0.0 --port ${PORT} --app-dir src"]
+CMD ["sh", "-c", "uvicorn ${APP_MODULE} --host 0.0.0.0 --port 8080 --app-dir src"]
