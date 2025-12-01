@@ -1,13 +1,14 @@
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
-import os
+from config import config
 
-load_dotenv()
-database_url = os.getenv("database_url")
+
+# load_dotenv()
+# database_url = os.getenv("database_url")
 
 # Create engine and session factory
-engine = create_engine(database_url)
+engine = create_engine(config.database_url)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 # Base class for ORM models

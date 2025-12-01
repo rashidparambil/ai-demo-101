@@ -1,12 +1,12 @@
-import os
 import logging
 from typing import List, Dict, Any
-from dotenv import load_dotenv
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 import psycopg2
 from psycopg2.extras import execute_batch
 from psycopg2.extensions import register_adapter
 import json
+from config import config
+
 
 from repository.process_type import ProcessType
 
@@ -25,26 +25,22 @@ class ClientRuleEmbedding:
         """
         self.client_id = client_id
 
-        # Load environment variables
-        load_dotenv()
-        
-        # Setup Google Embeddings
-        google_api_key = os.getenv("google_api_key")
+        # Setup Google Embeddings using unified config
+        google_api_key = config.google_api_key
         if not google_api_key:
-            raise ValueError("google_api_key not found in environment variables")
+            raise ValueError("google_api_key not found in config")
 
         self.embeddings = GoogleGenerativeAIEmbeddings(
             model="models/gemini-embedding-001",
             google_api_key=google_api_key
-
         )
 
-        # Database Configuration
-        self.db_host = os.getenv("db_host", "localhost")
-        self.db_port = int(os.getenv("db_port", "5432"))
-        self.db_name = os.getenv("db_name")
-        self.db_user = os.getenv("db_user")
-        self.db_password = os.getenv("db_password")
+        # Database Configuration from unified config
+        self.db_host = config.db_host
+        self.db_port = config.db_port
+        self.db_name = config.db_name
+        self.db_user = config.db_user
+        self.db_password = config.db_password
 
     def _get_connection(self):
         """Create and return a database connection."""

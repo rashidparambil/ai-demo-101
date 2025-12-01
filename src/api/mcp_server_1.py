@@ -1,8 +1,8 @@
 # client_mcp_server.py
 # MCP server exposing find_client(name: str) -> {id, name, match_score}
-import os
+from config import config
 import logging
-from dotenv import load_dotenv
+# from dotenv import load_dotenv
 import uvicorn
 from repository.client_rule_embedding import ClientRuleEmbedding
 
@@ -12,22 +12,26 @@ from mcp.server.fastmcp import FastMCP
 import psycopg2
 from psycopg2.extras import RealDictCursor
 
-load_dotenv()
+# load_dotenv()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("client_mcp_server")
 
-DB_HOST = os.getenv("db_host", "localhost")
-DB_PORT = int(os.getenv("db_port", 5432))
-DB_NAME = os.getenv("db_name")
-DB_USER = os.getenv("db_user")
-DB_PASSWORD = os.getenv("db_password")
+# DB_HOST = os.getenv("db_host", "localhost")
+# DB_PORT = int(os.getenv("db_port", 5432))
+# DB_NAME = os.getenv("db_name")
+# DB_USER = os.getenv("db_user")
+# DB_PASSWORD = os.getenv("db_password")
 
 # Optional simple API key auth for incoming MCP calls (Streamable HTTP supports headers)
-MCP_SERVER_API_KEY = os.getenv("MCP_SERVER_API_KEY","")  # set on server and client
+# MCP_SERVER_API_KEY = os.getenv("MCP_SERVER_API_KEY","")  # set on server and client
 
 def get_db_conn():
     return psycopg2.connect(
-        host=DB_HOST, port=DB_PORT, database=DB_NAME, user=DB_USER, password=DB_PASSWORD,
+        host=config.db_host,
+        port=config.db_port,
+        database=config.db_name,
+        user=config.db_user,
+        password=config.db_password,
         cursor_factory=RealDictCursor
     )
 

@@ -5,6 +5,17 @@ from genai.extract import Extract
 from repository.routes import router as client_router
 from repository.client_rules import rules_router
 from repository.models import MailRequest
+from config import config
+import logging
+
+# Setup logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+
+
+# Log config loaded
+logger.info(f"Config loaded: {config}")
 
 app = FastAPI()
 

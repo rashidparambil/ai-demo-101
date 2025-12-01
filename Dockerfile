@@ -1,8 +1,8 @@
 FROM python:3.11-slim
 
 ENV PYTHONUNBUFFERED=1 \
-    PIP_NO_CACHE_DIR=off \
-    PORT=8000
+    PIP_NO_CACHE_DIR=off 
+  
 
 WORKDIR /app
 
@@ -24,6 +24,6 @@ COPY src /app/src
 RUN useradd -m appuser && chown -R appuser /app
 USER appuser
 
-EXPOSE 8000
+EXPOSE ${PORT}
 
-CMD ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000", "--app-dir", "src"]
+CMD ["sh", "-c", "uvicorn ${APP_MODULE} --host 0.0.0.0 --port ${PORT} --app-dir src"]
