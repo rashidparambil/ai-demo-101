@@ -1,13 +1,16 @@
 # ...existing code...
 FROM python:3.11-slim
 
-# Accept build args with sensible defaults
+# Define build args with defaults
+ARG APP_MODULE=api.main:app
 ARG PORT=8080
 
+# Export to ENV so runtime can use them
 ENV PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=off \
     APP_MODULE=${APP_MODULE} \
-    PORT=${PORT}
+    PORT=${PORT} \
+    PYTHONPATH=/app/src:$PYTHONPATH
 
 WORKDIR /app/src
 
