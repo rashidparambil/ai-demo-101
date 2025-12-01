@@ -2,7 +2,6 @@
 FROM python:3.11-slim
 
 # Accept build args with sensible defaults
-ARG APP_MODULE=api.mcp_server_1:app
 ARG PORT=8080
 
 ENV PYTHONUNBUFFERED=1 \
