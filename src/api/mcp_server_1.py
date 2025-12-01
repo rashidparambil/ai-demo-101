@@ -1,10 +1,16 @@
+import sys
+from pathlib import Path
+# Add src to path so 'api' package is importable
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
+
 # client_mcp_server.py
 # MCP server exposing find_client(name: str) -> {id, name, match_score}
-from config import config
+from api.config import config
 import logging
 # from dotenv import load_dotenv
 import uvicorn
-from repository.client_rule_embedding import ClientRuleEmbedding
+from api.repository.client_rule_embedding import ClientRuleEmbedding
 
 # mcp provides a simple way to expose tools
 from mcp.server.fastmcp import FastMCP
@@ -35,7 +41,8 @@ def get_db_conn():
         cursor_factory=RealDictCursor
     )
 
-mcp = FastMCP("client-search-mcp",host="localhost",port=9000)
+mcp = FastMCP("client-search-mcp",host=config.mcp_host,port=config.mcp_port)
+
 
 
 @mcp.tool("find_client", description="Find client by name. Args: {name: str}")

@@ -1,8 +1,8 @@
 from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.orm import Session
 from typing import List
-from .models import ClientRules
-from .client_rule_embedding import ClientRuleEmbedding
+from api.repository.models import ClientRules
+from api.repository.client_rule_embedding import ClientRuleEmbedding
 
 # Create a router for client endpoints
 rules_router = APIRouter(prefix="/client_rule", tags=["client_rule"])

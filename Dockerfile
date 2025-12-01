@@ -2,7 +2,7 @@
 FROM python:3.11-slim
 
 # Accept build args with sensible defaults
-ARG APP_MODULE=api.main:app
+ARG APP_MODULE=api.mcp_server_1:app
 ARG PORT=8080
 
 ENV PYTHONUNBUFFERED=1 \
@@ -10,7 +10,7 @@ ENV PYTHONUNBUFFERED=1 \
     APP_MODULE=${APP_MODULE} \
     PORT=${PORT}
 
-WORKDIR /app
+WORKDIR /app/src
 
 # system deps needed for psycopg2 and building some packages
 RUN apt-get update && \
@@ -34,5 +34,5 @@ USER appuser
 EXPOSE 8080
 
 # Use shell so runtime env vars (APP_MODULE, PORT) are respected by uvicorn
-CMD ["sh", "-c", "uvicorn ${APP_MODULE} --host 0.0.0.0 --port ${PORT} --app-dir src"]
+CMD ["sh", "-c", "uvicorn ${APP_MODULE} --host 0.0.0.0 --port ${PORT}"]
 # ...existing code...

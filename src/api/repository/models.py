@@ -1,7 +1,7 @@
 from pgvector.sqlalchemy import Vector
 from pydantic import BaseModel
 
-from repository.process_type import ProcessType
+from api.repository.process_type import ProcessType
 
 class Client(BaseModel):
     """Schema for a client including its ID (database response)."""

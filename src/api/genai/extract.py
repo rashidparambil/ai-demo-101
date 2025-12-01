@@ -5,8 +5,8 @@ import json
 
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.agents import create_agent
-from .tools import remove_space_sepcial_chars_from_account_number, check_negative_balance_amount, validate_subject
-from repository.models import MailRequest
+from api.genai.tools import remove_space_sepcial_chars_from_account_number, check_negative_balance_amount, validate_subject
+from api.repository.models import MailRequest
 
 from langchain_mcp_adapters.client import MultiServerMCPClient
 from langchain_mcp_adapters.tools import load_mcp_tools

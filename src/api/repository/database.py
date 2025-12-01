@@ -1,8 +1,7 @@
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
-from config import config
-
+from api.config import config
 
 # load_dotenv()
 # database_url = os.getenv("database_url")

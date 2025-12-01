@@ -5,10 +5,9 @@ import psycopg2
 from psycopg2.extras import execute_batch
 from psycopg2.extensions import register_adapter
 import json
-from config import config
+from api.config import config
 
-
-from repository.process_type import ProcessType
+from api.repository.process_type import ProcessType
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
