@@ -54,7 +54,8 @@ class Config:
             "db_user": os.getenv("db_user"),
             "db_password": os.getenv("db_password"),
             "mcp_host":os.getenv("mcp_host"),
-            "mcp_port":os.getenv("mcp_port")
+            "mcp_port":os.getenv("mcp_port"),
+            "mcp_server_url": os.getenv("mcp_server_url"),
         }
         logger.info("✓ Loaded config from .env vars (Fallback)")
         return config
@@ -98,6 +99,10 @@ class Config:
     @property
     def mcp_port(self) -> str:
         return self._config.get("mcp_port")
+    
+    @property
+    def mcp_server_url(self) -> str:
+        return self._config.get("mcp_server_url")
 
     @property
     def raw(self) -> dict:
