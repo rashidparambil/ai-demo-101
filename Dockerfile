@@ -2,7 +2,7 @@
 FROM python:3.11-slim
 
 # Define build args with defaults
-ARG APP_MODULE=src.api.mcp_server_1:app # <--- ADJUSTED APP_MODULE
+ARG APP_MODULE=src.api.mcp_server_1:app 
 ARG PORT=8080
 
 # Export to ENV so runtime can use them
@@ -11,7 +11,7 @@ ENV PYTHONUNBUFFERED=1 \
     APP_MODULE=${APP_MODULE} \
     PORT=${PORT}
 
-WORKDIR /app # <--- ADJUSTED WORKDIR (Set to the root of the app)
+WORKDIR /app 
 
 # system deps needed for psycopg2 and building some packages
 RUN apt-get update && \
@@ -19,13 +19,13 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 # copy dependencies first (leverage layer caching)
-COPY requirements.txt . # <--- ADJUSTED: Copy to /app/requirements.txt
+COPY requirements.txt . 
 
 RUN pip install --upgrade pip && \
-    pip install -r requirements.txt # <--- ADJUSTED: Install from /app/requirements.txt
+    pip install -r requirements.txt 
 
 # copy source
-COPY src ./src # <--- ADJUSTED: Copies src folder to /app/src
+COPY src ./src 
 
 # non-root user (optional)
 # This command is correct for setting user and ownership
