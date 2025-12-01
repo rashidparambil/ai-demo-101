@@ -15,7 +15,7 @@ class Extract:
     def __init__(self):
         """Initialize without creating MCP session (do it per-request instead)."""
         load_dotenv()
-        self.MCP_SERVER_URL = os.getenv("MCP_SERVER_URL", "https://mcp-server-1-489053910225.us-central1.run.app/mcp")
+        self.MCP_SERVER_URL = os.getenv("MCP_SERVER_URL", "https://mcp-server-1-489053910225.us-central1.run.app/app")
         self.GOOGLE_API_KEY = os.getenv("google_api_key")
         
         self.system_message = '''

@@ -2,17 +2,16 @@
 FROM python:3.11-slim
 
 # Define build args with defaults
-ARG APP_MODULE=api.mcp_server_1:app
+ARG APP_MODULE=src.api.mcp_server_1:app # <--- ADJUSTED APP_MODULE
 ARG PORT=8080
 
 # Export to ENV so runtime can use them
 ENV PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=off \
     APP_MODULE=${APP_MODULE} \
-    PORT=${PORT} \
-    PYTHONPATH=/app/src:$PYTHONPATH
+    PORT=${PORT}
 
-WORKDIR /app/src
+WORKDIR /app # <--- ADJUSTED WORKDIR (Set to the root of the app)
 
 # system deps needed for psycopg2 and building some packages
 RUN apt-get update && \
@@ -20,15 +19,16 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 # copy dependencies first (leverage layer caching)
-COPY requirements.txt /app/requirements.txt
+COPY requirements.txt . # <--- ADJUSTED: Copy to /app/requirements.txt
 
 RUN pip install --upgrade pip && \
-    pip install -r /app/requirements.txt
+    pip install -r requirements.txt # <--- ADJUSTED: Install from /app/requirements.txt
 
 # copy source
-COPY src /app/src
+COPY src ./src # <--- ADJUSTED: Copies src folder to /app/src
 
 # non-root user (optional)
+# This command is correct for setting user and ownership
 RUN useradd -m appuser && chown -R appuser /app
 USER appuser
 
@@ -36,5 +36,5 @@ USER appuser
 EXPOSE 8080
 
 # Use shell so runtime env vars (APP_MODULE, PORT) are respected by uvicorn
+# Uvicorn will import 'src.api.mcp_server_1:app' which finds src/api/mcp_server_1.py
 CMD ["sh", "-c", "uvicorn ${APP_MODULE} --host 0.0.0.0 --port ${PORT}"]
-# ...existing code...
