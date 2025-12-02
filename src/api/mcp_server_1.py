@@ -11,6 +11,13 @@ import logging
 # from dotenv import load_dotenv
 import uvicorn
 from api.repository.client_rule_embedding import ClientRuleEmbedding
+from api.repository.database import SessionLocal
+from api.repository.account import AccountRepository
+from api.repository.account_transaction import AccountTransactionRepository
+from api.repository.db_models import Account as AccountTable, AccountTransaction as AccountTransactionTable
+from api.repository.models import Account as AccountModel, AccountTransaction as AccountTransactionModel
+from typing import List
+import json
 
 # mcp provides a simple way to expose tools
 from mcp.server.fastmcp import FastMCP
@@ -108,6 +115,88 @@ def find_all_client_rule_by_client_id(client_id: int, process_type: int) -> dict
 
 
 
+
+
+@mcp.tool("get_all_accounts", description="Get all accounts. Args: {skip: int, limit: int}")
+def get_all_accounts(skip: int = 0, limit: int = 100) -> List[dict]:
+    """
+    Get all accounts.
+    Returns: List of accounts.
+    """
+    print(f"**************************************Getting all accounts*************")
+    try:
+        db = SessionLocal()
+        repo = AccountRepository(db)
+        accounts = repo.list(skip, limit)
+        # Convert to dict for JSON serialization
+        return [AccountModel.from_orm(a).dict() for a in accounts]
+    except Exception as e:
+        logger.exception("Failed to get accounts")
+        raise e
+    finally:
+        db.close()
+
+@mcp.tool("bulk_create_accounts", description="Bulk create accounts. Args: {accounts: List[dict]}")
+def bulk_create_accounts(accounts: List[dict]) -> List[dict]:
+    """
+    Bulk create accounts.
+    Returns: List of created accounts.
+    """
+    print(f"**************************************Bulk creating accounts*************")
+    try:
+        db = SessionLocal()
+        repo = AccountRepository(db)
+        # Convert dicts to SQLAlchemy models
+        # Note: Pydantic validation happens here implicitly if we use AccountModel first
+        account_models = [AccountModel(**a) for a in accounts]
+        db_accounts = [AccountTable(**a.dict(exclude={"id"})) for a in account_models]
+        
+        created_accounts = repo.bulk_create(db_accounts)
+        return [AccountModel.from_orm(a).dict() for a in created_accounts]
+    except Exception as e:
+        logger.exception("Failed to bulk create accounts")
+        raise e
+    finally:
+        db.close()
+
+@mcp.tool("get_all_transactions", description="Get all transactions. Args: {skip: int, limit: int}")
+def get_all_transactions(skip: int = 0, limit: int = 100) -> List[dict]:
+    """
+    Get all transactions.
+    Returns: List of transactions.
+    """
+    print(f"**************************************Getting all transactions*************")
+    try:
+        db = SessionLocal()
+        repo = AccountTransactionRepository(db)
+        transactions = repo.list(skip, limit)
+        return [AccountTransactionModel.from_orm(t).dict() for t in transactions]
+    except Exception as e:
+        logger.exception("Failed to get transactions")
+        raise e
+    finally:
+        db.close()
+
+@mcp.tool("bulk_create_transactions", description="Bulk create transactions. Args: {transactions: List[dict]}")
+def bulk_create_transactions(transactions: List[dict]) -> List[dict]:
+    """
+    Bulk create transactions.
+    Returns: List of created transactions.
+    """
+    print(f"**************************************Bulk creating transactions*************")
+    try:
+        db = SessionLocal()
+        repo = AccountTransactionRepository(db)
+        transaction_models = [AccountTransactionModel(**t) for t in transactions]
+        db_transactions = [AccountTransactionTable(**t.dict(exclude={"id"})) for t in transaction_models]
+        
+        created_transactions = repo.bulk_create(db_transactions)
+        return [AccountTransactionModel.from_orm(t).dict() for t in created_transactions]
+    except Exception as e:
+        logger.exception("Failed to bulk create transactions")
+        raise e
+    finally:
+        db.close()
 
 if __name__ == "__main__":
     # Run as streamable-http MCP server (exposes POST /mcp)
