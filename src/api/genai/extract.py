@@ -119,6 +119,10 @@ class Extract:
                 - Include only one final extracted_fields array
                 - If ANY step fails (subject, client, rules), return error JSON immediately and STOP
                 - Return ONLY valid JSON, nothing else
+            **Save Final Reponse**
+                - Get the content of the last messages dictionary. 
+                - Then remove single quotes from start and end.remove the json text too.
+                - Call accounts_urc_check(final_respone=...)
         '''
      
     async def process(self, message: str):
@@ -154,6 +158,7 @@ class Extract:
             result = await agent.ainvoke(
                 {"messages": [{"role": "user", "content": message}]}
             )
-            final_response = result["messages"][-1].content
-            return final_response
+            #final_response = result["messages"][-1].content
+            #return final_response
+            return result
 
