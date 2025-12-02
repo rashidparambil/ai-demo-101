@@ -17,3 +17,32 @@ class MailRequest(BaseModel):
     from_address: str
     subject: str
     content: str    
+
+
+from uuid import UUID
+from typing import Optional
+from decimal import Decimal
+
+class Account(BaseModel):
+    """Schema for an account."""
+    id: Optional[int] = None
+    client_id: int
+    account_name: Optional[str] = None
+    account_number: Optional[str] = None
+    account_balance: Optional[Decimal] = None
+    account_fee_balance: Optional[Decimal] = None
+    correlation_id: Optional[UUID] = None
+
+    class Config:
+        from_attributes = True
+
+class AccountTransaction(BaseModel):
+    """Schema for an account transaction."""
+    id: Optional[int] = None
+    account_id: int
+    transaction_amount: Optional[Decimal] = None
+    fee_amount: Optional[Decimal] = None
+    correlation_id: Optional[UUID] = None
+
+    class Config:
+        from_attributes = True

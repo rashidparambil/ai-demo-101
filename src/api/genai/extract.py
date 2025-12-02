@@ -8,6 +8,7 @@ from langchain.agents import create_agent
 from api.genai.tools import remove_space_sepcial_chars_from_account_number, check_negative_balance_amount, validate_subject
 from api.repository.models import MailRequest
 from api.config import config
+from api.repository.final_response import FinalResponse, ExtractedField, Rule, FieldValidation
 
 from langchain_mcp_adapters.client import MultiServerMCPClient
 from langchain_mcp_adapters.tools import load_mcp_tools
@@ -144,7 +145,10 @@ class Extract:
                 google_api_key=self.GOOGLE_API_KEY
             )
 
-            agent = create_agent(llm, tools=combined_tools, system_prompt=self.system_message)
+            agent = create_agent(llm, 
+                                 tools=combined_tools, 
+                                 system_prompt=self.system_message
+                                 )
             
             # Use the agent within the session context
             result = await agent.ainvoke(

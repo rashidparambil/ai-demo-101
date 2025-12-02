@@ -8,6 +8,8 @@ from fastapi import FastAPI
 from api.genai.extract import Extract
 from api.repository.routes import router as client_router
 from api.repository.client_rules import rules_router
+from api.repository.account_routes import router as account_router
+from api.repository.account_transaction_routes import router as transaction_router
 from api.repository.models import MailRequest
 from api.config import config
 from api.repository.final_response import FinalResponse
@@ -28,6 +30,8 @@ app = FastAPI()
 # Register the client router
 app.include_router(client_router)
 app.include_router(rules_router)
+app.include_router(account_router)
+app.include_router(transaction_router)
 
 
 
