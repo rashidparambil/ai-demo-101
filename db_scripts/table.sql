@@ -44,3 +44,9 @@ CREATE TABLE process_log (
 	process_type int, -- 1 - Placement 2 - Transaction
 	error_detail text
 );
+
+CREATE TABLE table_details (
+    id SERIAL PRIMARY KEY,
+    table_description TEXT,             -- The actual text of the rule
+    embedding vector(3072)         -- The vector (size depends on model, e.g., Gemeni is 768)
+);
