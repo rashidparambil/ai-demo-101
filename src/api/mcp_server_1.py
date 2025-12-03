@@ -89,7 +89,7 @@ def find_client(name: str) -> dict:
 def find_all_client_rule_by_client_id(client_id: int, process_type: int) -> dict:
     """
     Find a client rule by client_id.
-    Returns: [{"id": int, "rule_content": str, "score": float}] or raise if not found.
+    Returns: [{"id": int, "rule_content": str, "score": float}] or empty dict if not found.
     """
     print(f"**************************************Finding client rule by client Id: {client_id}, process_type: {process_type}*************") 
     # Basic normalization + simple LIKE search; replace with your fuzzy logic if desired
@@ -144,20 +144,21 @@ def accounts_urc_check(final_response: FinalResponse) -> FinalResponse:
     """
     try:
         db = SessionLocal()
-        if final_response.process_type == ProcessType.Placement.value:
-            account_numbers =  [
-                field.customer_account
-                for field in final_response.extracted_fields # Use .get with a default [] for safety
-            ]
-            print("Get accounts from database")
-            repo = AccountRepository(db)
-            accounts = repo.get_by_account_numbers(account_numbers)
-            
-            existing_accounts_set = {
-                account.account_number 
-                for account in accounts
-            }
-            all_accounts_set = set(account_numbers)
+        print("Get accounts from database")
+        repo = AccountRepository(db)
+        
+        account_numbers =  [
+            field.customer_account
+            for field in final_response.extracted_fields # Use .get with a default [] for safety
+        ]
+        accounts = repo.get_by_account_numbers(account_numbers)
+        existing_accounts_set = {
+            account.account_number 
+            for account in accounts
+        }
+        all_accounts_set = set(account_numbers)
+
+        if final_response.process_type == ProcessType.Transaction.value:
             missing_accounts_set = all_accounts_set - existing_accounts_set
             missing_accounts_list = list(missing_accounts_set)
             print("Update validation message for missing accounts")
@@ -166,6 +167,33 @@ def accounts_urc_check(final_response: FinalResponse) -> FinalResponse:
                     validation = FieldValidation(message="Account does not exists")
                     record.field_validations.append(validation)
                     print("Account does not exists")
+        elif final_response.process_type == ProcessType.Placement.value:
+            duplicate_accounts_set = existing_accounts_set - all_accounts_set
+            duplicate_accounts_list = list(duplicate_accounts_set)
+            print("Update validation message for duplicate accounts")
+            for record in final_response.extracted_fields:
+                if record.customer_account in duplicate_accounts_list:
+                    validation = FieldValidation(message="Account already exists")
+                    record.field_validations.append(validation)
+                    print("Account already exists")
+        return final_response
+    except Exception as e:
+        logger.exception("Failed to get accounts")
+        raise e
+    finally:
+        db.close()
+
+@mcp.tool("save_accounts_and_transactions", description="Save accounts and transactions. Args: {final_response: FinalResponse}")
+def save_accounts_and_transactions(final_response: FinalResponse) -> FinalResponse:
+    """
+    Save accounts and transaction to database
+    Returns: FinalResponse.
+    """
+    try:
+        db = SessionLocal()
+        repo = AccountRepository(db)
+        repo.process_accounts(final_response.model_dump_json())
+        print("Account and transaction updated to database")
         return final_response
     except Exception as e:
         logger.exception("Failed to get accounts")
@@ -239,5 +267,5 @@ if __name__ == "__main__":
     # Run as streamable-http MCP server (exposes POST /mcp)
     # Ensure you set MCP_SERVER_API_KEY and configure reverse proxy / TLS for production
     # mcp.run(transport="streamable-http")
-    uvicorn.run(app)
+    uvicorn.run(app, port=9000)
 

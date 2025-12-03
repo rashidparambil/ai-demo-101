@@ -48,7 +48,7 @@ def validate_subject(subject: str) -> dict:
             "process_type": 1,
             "message": f"Subject '{subject}' matched 'Placement', ProcessType set to 1"
         }
-    elif "Transaction" in subject_lower:
+    elif "transaction" in subject_lower:
         return {
             "valid": True,
             "process_type": 2,

@@ -1,12 +1,19 @@
+import psycopg2
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 from typing import List, Optional
 from api.repository.db_models import Account
 from uuid import UUID
+from api.config import config
 
 class AccountRepository:
     def __init__(self, db: Session):
         self.db = db
+        self.db_host = config.db_host
+        self.db_port = config.db_port
+        self.db_name = config.db_name
+        self.db_user = config.db_user
+        self.db_password = config.db_password
 
     def create(self, account: Account) -> Account:
         """Create a new account."""
@@ -75,3 +82,34 @@ class AccountRepository:
         except SQLAlchemyError as e:
             self.db.rollback()
             raise e
+
+    def process_accounts(self, final_response: str) -> bool:
+        """Insert accounts and transaction from final_response json"""
+        conn = None
+        try:
+            conn = self._get_connection()
+            cursor = conn.cursor()
+            sql = "call public.process_accounts_and_transaction_from_json(%s::jsonb)"
+            cursor.execute(sql, (final_response,))
+            conn.commit()
+            return True
+        except psycopg2.Error as e:
+            # Rollback in case of any error
+            print("Error while executing sp")
+            if conn:
+                conn.rollback()
+        finally:
+            # Close the connection
+            if conn:
+                conn.close()
+
+    def _get_connection(self):
+        """Create and return a database connection."""
+        conn = psycopg2.connect(
+            host=self.db_host,
+            port=self.db_port,
+            database=self.db_name,
+            user=self.db_user,
+            password=self.db_password
+        )
+        return conn
