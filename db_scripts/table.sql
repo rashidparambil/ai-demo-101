@@ -17,6 +17,7 @@ CREATE TABLE client_rule (
     client_id INT REFERENCES client(id) ON DELETE CASCADE,
     rule_content TEXT,             -- The actual text of the rule
     process_type int,              -- 1 - Placement 2 - Transaction
+    is_auto_apply boolean DEFAULT true,
     embedding vector(3072)         -- The vector (size depends on model, e.g., Gemeni is 3072)
 );
 
@@ -43,4 +44,10 @@ CREATE TABLE process_log (
     correlation_id uuid,
 	process_type int, -- 1 - Placement 2 - Transaction
 	error_detail text
+);
+
+CREATE TABLE table_details (
+    id SERIAL PRIMARY KEY,
+    table_description TEXT,             -- The actual text of the rule
+    embedding vector(3072)         -- The vector (size depends on model, e.g., Gemeni is 768)
 );
