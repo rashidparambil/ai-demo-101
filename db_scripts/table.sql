@@ -17,6 +17,7 @@ CREATE TABLE client_rule (
     client_id INT REFERENCES client(id) ON DELETE CASCADE,
     rule_content TEXT,             -- The actual text of the rule
     process_type int,              -- 1 - Placement 2 - Transaction
+    is_auto_apply boolean DEFAULT true,
     embedding vector(3072)         -- The vector (size depends on model, e.g., Gemeni is 3072)
 );
 
