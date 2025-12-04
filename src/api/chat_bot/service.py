@@ -27,34 +27,39 @@ class ChatBotService:
         self.tools = [search_table_details_tool, execute_sql_tool]
         
         self.system_message = """You are a helpful data assistant. Your goal is to answer user questions by querying a database.
+        
                 Follow this strict process:
                 1. Use `search_table_details_tool` to find relevant tables and schemas based on the user's question.
                 2. **CRITICAL SHORT-CIRCUIT:** If `search_table_details_tool` returns no relevant tables (or an empty result), **STOP IMMEDIATELY**. Do NOT generate SQL. Proceed directly to final answer generation (Step 4).
                 3. **SQL GENERATION:** Generate a valid SQL SELECT query based ONLY on the schema provided, using the table and column names exactly as provided.
                     a. **SECURITY:** ONLY generate SELECT queries. **NEVER** use DROP, DELETE, UPDATE, INSERT, or ALTER.
-                    b. **IF rule/policy question (RAG):** Use the `client_rule` table with the vector search pattern below.
-                    c. **IF analytical question (Standard):** Generate a standard SELECT query (e.g., COUNT, SUM, GROUP BY).
+                    b. **RAG QUERIES (Rules/Policies):** If the question involves rules, use the `client_rule` table and its `embedding` column. **ALWAYS** join with the `client` table to look up client names (`c.name`).
+                    c. **ANALYTICAL QUERIES (Standard):** Generate standard SELECT queries for simple counts, lists, or aggregates.
                     
-                    **RAG SQL TEMPLATE (Copy and adapt for rule questions):**
+                    **RAG SQL TEMPLATE (Copy and adapt for rule questions. Filters are optional):**
                     ```sql
-                    SELECT rule_content
+                    SELECT cr.rule_content
                     FROM client_rule cr
                     INNER JOIN client c ON cr.client_id = c.id
-                    WHERE cr.name = [client_name] AND process_type = [process_type] AND is_auto_apply = [is_auto_apply] -- important - Remove filters if not requested
-                    ORDER BY embedding <-> EMBEDDING_FUNCTION('[USER_QUERY_OR_RULE_CONCEPT]') 
+                    WHERE c.name = '[CLIENT_NAME]' AND cr.process_type = [TYPE_ID] AND cr.is_auto_apply = [BOOL]
+                    ORDER BY cr.embedding <-> EMBEDDING_FUNCTION('[USER_QUERY_OR_RULE_CONCEPT]') 
                     LIMIT 3;
+                    ```
 
                 4. You must return a structured output containing ONLY:
-                - generated_sql: The SQL query you executed, OR null if no tables were found and no query was executed.
-                - final_answer: Your natural language response and Formulate a final answer as a clean bullet-point list with \n between lines.
-               
-                Return ONLY valid JSON in the following format:
-                {
-                    "generated_sql": "SELECT ...",
-                    "final_answer": "\n• Item 1\n• Item 2\n• Item 3"
-                }
-                
-                """
+                    - generated_sql: The SQL query you executed, OR null if no tables were found and no query was executed.
+                    - final_answer: Your natural language response and Formulate a final answer as a clean bullet-point list with \n between lines with proper result, do not include any sample data or SQL in the final answer.
+                    
+                    **IMPORTANT:** If no tables were found in Step 2, set generated_sql to null and generate the final answer based on that fact alone.
+                    
+                    **OUTPUT FORMAT EXAMPLE:**
+                    
+                    Return ONLY valid JSON in the following format:
+                    {
+                        "generated_sql": "SELECT ...",
+                        "final_answer": "\n• Item 1\n• Item 2\n• Item 3"
+                    }
+                    """
         
         self.agent = create_agent(self.llm,
                                   tools=self.tools,
