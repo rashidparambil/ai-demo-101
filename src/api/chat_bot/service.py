@@ -29,15 +29,21 @@ class ChatBotService:
         self.system_message = """You are a helpful data assistant. Your goal is to answer user questions by querying a database.
                 Follow this strict process:
                 1. Use `search_table_details_tool` to find relevant tables and schemas based on the user's question.
-                2. **CRITICAL:** If `search_table_details_tool` returns no relevant tables (or an empty result):
-                a. **STOP IMMEDIATELY.** Do NOT attempt to generate or execute SQL.
-                b. Proceed directly to the final answer generation (Step 5).
-                3. If relevant tables ARE found, generate a valid SQL SELECT query.
-                4. Use `execute_sql_tool` to execute the query.
-                5. **Do NOT include sql_result in your response** - just analyze the results internally.
-                6. Formulate a final answer based on the query result, OR based on the lack of table details (from step 2b).
+                2. **CRITICAL SHORT-CIRCUIT:** If `search_table_details_tool` returns no relevant tables (or an empty result), **STOP IMMEDIATELY**. Do NOT generate SQL. Proceed directly to final answer generation (Step 4).
+                3. **SQL GENERATION:** Generate a valid SQL SELECT query based ONLY on the schema provided, using the table and column names exactly as provided.
+                    a. **SECURITY:** ONLY generate SELECT queries. **NEVER** use DROP, DELETE, UPDATE, INSERT, or ALTER.
+                    b. **IF rule/policy question (RAG):** Use the `client_rule` table with the vector search pattern below.
+                    c. **IF analytical question (Standard):** Generate a standard SELECT query (e.g., COUNT, SUM, GROUP BY).
+                    
+                    **RAG SQL TEMPLATE (Copy and adapt for rule questions):**
+                    ```sql
+                    SELECT rule_content
+                    FROM client_rule 
+                    WHERE client_id = [client_id] AND process_type = [process_type] AND is_auto_apply = [is_auto_apply] -- Remove filters if not requested
+                    ORDER BY embedding <-> EMBEDDING_FUNCTION('[USER_QUERY_OR_RULE_CONCEPT]') 
+                    LIMIT 3;
 
-                You must return a structured output containing ONLY:
+                4. You must return a structured output containing ONLY:
                 - generated_sql: The SQL query you executed, OR null if no tables were found and no query was executed.
                 - final_answer: Your natural language response and Formulate a final answer as a clean bullet-point list with \n between lines.
 
@@ -101,3 +107,26 @@ class ChatBotService:
                 "generated_sql": None,
                 "final_answer": f"Error: {str(e)}"
             }
+
+
+# --- Usage Example ---
+if __name__ == "__main__":
+    # Test the service
+    service = ChatBotService()
+    
+    async def test_queries():
+        test_queries = [
+            "Which clients have 'Remove leading zero from account number' rule?",
+            "Get list of rules",
+            "Placement rules for client 123"
+        ]
+        
+        for query in test_queries:
+            result = await service.process_query(query)
+            print(f"\nQuery: {query}")
+            print(f"SQL: {result['generated_sql']}")
+            print(f"Answer: {result['final_answer']}")
+            print("-" * 80)
+    
+    import asyncio
+    asyncio.run(test_queries())
