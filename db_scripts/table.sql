@@ -32,7 +32,7 @@ CREATE TABLE account (
 
 CREATE TABLE account_transaction (
     id SERIAL PRIMARY KEY,
-    account_id INT REFERENCES client(id) ON DELETE CASCADE,
+    account_id INT REFERENCES account(id) ON DELETE CASCADE,
     transaction_amount decimal(10,2),
 	fee_amount decimal(10,2),
 	correlation_id uuid

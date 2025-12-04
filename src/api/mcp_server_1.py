@@ -267,5 +267,5 @@ if __name__ == "__main__":
     # Run as streamable-http MCP server (exposes POST /mcp)
     # Ensure you set MCP_SERVER_API_KEY and configure reverse proxy / TLS for production
     # mcp.run(transport="streamable-http")
-    uvicorn.run(app, port=9000)
+    uvicorn.run(app)
 

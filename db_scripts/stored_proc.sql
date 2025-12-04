@@ -1,11 +1,7 @@
--- Procedure to process account data (Insert new account OR Update existing account/Transaction)
--- based on the 'process_type' flag in the input JSON.
--- PROCESS_TYPE = 1: Inserts new account and initial transaction.
--- PROCESS_TYPE = 2: Updates existing account balance and inserts transaction.
-CREATE OR REPLACE PROCEDURE public.process_accounts_and_transaction_from_json(
-    p_json_data jsonb
-)
-LANGUAGE plpgsql
+-- DROP PROCEDURE public.process_accounts_and_transaction_from_json(json);
+
+CREATE OR REPLACE PROCEDURE public.process_accounts_and_transaction_from_json(IN p_json_data json)
+ LANGUAGE plpgsql
 AS $procedure$
 DECLARE
     -- Generate a single UUID for all records in this batch insertion for traceability
@@ -29,32 +25,16 @@ BEGIN
 	            (field ->> 'balance_amount')::numeric(10, 2) AS balance_amount,
 	            (field ->> 'amount_paid')::numeric(10, 2) AS transaction_amount
 	        FROM
-	            jsonb_array_elements(p_json_data -> 'extracted_fields') AS field
+	            json_array_elements(p_json_data -> 'extracted_fields') AS field
 	        WHERE
-	            field -> 'field_validations' = '[]'::jsonb
-	    ),
-	    inserted_accounts AS (
-	        -- INSERT 1: Insert into the account table
-	        INSERT INTO public.account (
-	            client_id, account_name, account_number, account_balance, account_fee_balance, correlation_id
-	        )
-	        SELECT
-	            v_client_id, vf.customer_name, vf.customer_account, vf.balance_amount, 0.00, v_correlation_id
-	        FROM valid_fields vf
-	        RETURNING
-	            id, account_name, vf.transaction_amount, v_correlation_id AS correlation_id
+	            json_array_length(field -> 'field_validations') = 0
 	    )
-	    -- INSERT 2: Insert into the account_transaction table using the IDs and data returned from INSERT 1
-	    INSERT INTO public.account_transaction (
-	        account_id, transaction_amount, fee_amount, correlation_id
-	    )
-	    SELECT
-	        ia.id,
-	        ia.transaction_amount,
-	        0.00,
-	        ia.correlation_id
-	    FROM inserted_accounts ia;
-        -- The final CTE's SELECT is implicitly executed for its DML (INSERT)
+        INSERT INTO public.account (
+            client_id, account_name, account_number, account_balance, account_fee_balance, correlation_id
+        )
+        SELECT
+            v_client_id, vf.customer_name, vf.customer_account, vf.balance_amount, 0.00, v_correlation_id
+        FROM valid_fields vf;
 
 	ELSIF v_process_type = 2 THEN
 		-- --- PROCESS TYPE 2: UPDATE ACCOUNT AND INSERT TRANSACTION (Payment) ---
@@ -64,9 +44,9 @@ BEGIN
 	            field ->> 'customer_account' AS account_number_match,
 	            (field ->> 'amount_paid')::numeric(10, 2) AS transaction_amount
 	        FROM
-	            jsonb_array_elements(p_json_data -> 'extracted_fields') AS field
+	            json_array_elements(p_json_data -> 'extracted_fields') AS field
 	        WHERE
-	            field -> 'field_validations' = '[]'::jsonb
+	            json_array_length(field -> 'field_validations') = 0
 	    ),
 	    updated_accounts AS (
 	        -- UPDATE 1: Update the existing account balance
@@ -93,4 +73,5 @@ BEGIN
 
 	END IF;
 END;
-$procedure$;
+$procedure$
+;

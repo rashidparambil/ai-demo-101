@@ -89,7 +89,7 @@ class AccountRepository:
         try:
             conn = self._get_connection()
             cursor = conn.cursor()
-            sql = "call public.process_accounts_and_transaction_from_json(%s::jsonb)"
+            sql = "call public.process_accounts_and_transaction_from_json(%s::json)"
             cursor.execute(sql, (final_response,))
             conn.commit()
             return True
