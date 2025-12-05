@@ -1,5 +1,6 @@
 import sys
 from pathlib import Path
+
 # Add src to path so 'api' package is importable
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
@@ -16,6 +17,8 @@ from api.repository.account import AccountRepository
 from api.repository.account_transaction import AccountTransactionRepository
 from api.repository.db_models import Account as AccountTable, AccountTransaction as AccountTransactionTable
 from api.repository.models import Account as AccountModel, AccountTransaction as AccountTransactionModel
+from api.repository.final_response import FieldValidation, FinalResponse
+from api.repository.process_type import ProcessType
 from typing import List
 import json
 
@@ -86,7 +89,7 @@ def find_client(name: str) -> dict:
 def find_all_client_rule_by_client_id(client_id: int, process_type: int) -> dict:
     """
     Find a client rule by client_id.
-    Returns: [{"id": int, "rule_content": str, "score": float}] or raise if not found.
+    Returns: [{"id": int, "rule_content": str, "score": float}] or empty dict if not found.
     """
     print(f"**************************************Finding client rule by client Id: {client_id}, process_type: {process_type}*************") 
     # Basic normalization + simple LIKE search; replace with your fuzzy logic if desired
@@ -113,10 +116,6 @@ def find_all_client_rule_by_client_id(client_id: int, process_type: int) -> dict
         logger.exception("DB client rule lookup failed")
         raise e  # MCP will return tool error to caller
 
-
-
-
-
 @mcp.tool("get_all_accounts", description="Get all accounts. Args: {skip: int, limit: int}")
 def get_all_accounts(skip: int = 0, limit: int = 100) -> List[dict]:
     """
@@ -130,6 +129,72 @@ def get_all_accounts(skip: int = 0, limit: int = 100) -> List[dict]:
         accounts = repo.list(skip, limit)
         # Convert to dict for JSON serialization
         return [AccountModel.from_orm(a).dict() for a in accounts]
+    except Exception as e:
+        logger.exception("Failed to get accounts")
+        raise e
+    finally:
+        db.close()
+
+
+@mcp.tool("accounts_urc_check", description="Check Unrecognised accounts. Args: {final_response: FinalResponse}")
+def accounts_urc_check(final_response: FinalResponse) -> FinalResponse:
+    """
+    Check Unrecognised accounts.
+    Returns: FinalResponse.
+    """
+    try:
+        db = SessionLocal()
+        print("Get accounts from database")
+        repo = AccountRepository(db)
+        
+        account_numbers =  [
+            field.customer_account
+            for field in final_response.extracted_fields # Use .get with a default [] for safety
+        ]
+        accounts = repo.get_by_account_numbers(account_numbers)
+        existing_accounts_set = {
+            account.account_number 
+            for account in accounts
+        }
+        all_accounts_set = set(account_numbers)
+
+        if final_response.process_type == ProcessType.Transaction.value:
+            missing_accounts_set = all_accounts_set - existing_accounts_set
+            missing_accounts_list = list(missing_accounts_set)
+            print("Update validation message for missing accounts")
+            for record in final_response.extracted_fields:
+                if record.customer_account in missing_accounts_list:
+                    validation = FieldValidation(message="Account does not exists")
+                    record.field_validations.append(validation)
+                    print("Account does not exists")
+        elif final_response.process_type == ProcessType.Placement.value:
+            duplicate_accounts_set = existing_accounts_set - all_accounts_set
+            duplicate_accounts_list = list(duplicate_accounts_set)
+            print("Update validation message for duplicate accounts")
+            for record in final_response.extracted_fields:
+                if record.customer_account in duplicate_accounts_list:
+                    validation = FieldValidation(message="Account already exists")
+                    record.field_validations.append(validation)
+                    print("Account already exists")
+        return final_response
+    except Exception as e:
+        logger.exception("Failed to get accounts")
+        raise e
+    finally:
+        db.close()
+
+@mcp.tool("save_accounts_and_transactions", description="Save accounts and transactions. Args: {final_response: FinalResponse}")
+def save_accounts_and_transactions(final_response: FinalResponse) -> FinalResponse:
+    """
+    Save accounts and transaction to database
+    Returns: FinalResponse.
+    """
+    try:
+        db = SessionLocal()
+        repo = AccountRepository(db)
+        repo.process_accounts(final_response.model_dump_json())
+        print("Account and transaction updated to database")
+        return final_response
     except Exception as e:
         logger.exception("Failed to get accounts")
         raise e
