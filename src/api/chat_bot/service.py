@@ -71,49 +71,10 @@ class ChatBotService:
     async def process_query(self, query: str) -> Dict[str, Any]:
         try:
             result = await self.agent.ainvoke({"messages": [{"role": "user", "content": query}]})
-            
-            # return result["messages"][-1]["content"]
-
             final_response = result["messages"][-1].content
-            print(final_response)
-
             raw_response = final_response[0]["text"][7:-3]
-            print(raw_response)
             formatedresponse : ChatBotResponse = json.loads(raw_response)
             return     formatedresponse
-                        
-            # # Try structuredResponse first
-            # if hasattr(final_message, 'structuredResponse') and final_message.structuredResponse:
-            #     structured = final_message.structuredResponse.dict()
-            #     return {
-            #         "generated_sql": structured.get("generated_sql"),
-            #         "final_answer": structured.get("final_answer")
-            #     }
-            
-            # # Regex for Gemini text format
-            # content_str = str(final_message.content)
-            # pattern = r"generated_sql='([^']+)'\s*final_answer='([^']+)'"
-            # match = re.search(pattern, content_str)
-            
-            # if match:
-            #     return {
-            #         "generated_sql": match.group(1),
-            #         "final_answer": match.group(2)
-            #     }
-            
-            # # JSON fallback
-            # clean_content = content_str.replace("```json", "").replace("```", "").strip()
-            # try:
-            #     parsed = json.loads(clean_content)
-            #     return {
-            #         "generated_sql": parsed.get("generated_sql"),
-            #         "final_answer": parsed.get("final_answer")
-            #     }
-            # except json.JSONDecodeError:
-            #     return {
-            #         "generated_sql": None,
-            #         "final_answer": content_str[:500]
-            #     }
                 
         except Exception as e:
             logger.error(f"Error processing query: {e}")
