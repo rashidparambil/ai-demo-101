@@ -45,8 +45,8 @@ extractor = Extract()
 @app.post("/process")
 async def read_item(request: MailRequest):
     response = await extractor.process(f"subject={request.subject}\n contnet={request.content}")
-    raw_response = response[0]["text"][7:-3] #remove quotes from the start and end for json string
-    json_response: FinalResponse = json.loads(raw_response)
+    #raw_response = response[0]["text"][7:-3] #remove quotes from the start and end for json string
+    #json_response: FinalResponse = json.loads(raw_response)
 
     #Check account exists in database if the process type is Transaction
     #Handle error
@@ -54,5 +54,5 @@ async def read_item(request: MailRequest):
     #Write process log for error record
     #Initiate a response email
 
-    return {"response": json_response }
+    return {"response": response }
 

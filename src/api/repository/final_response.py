@@ -1,15 +1,17 @@
 from typing import List
 
-class FieldValidation:
+from pydantic import BaseModel, ConfigDict
+
+class FieldValidation(BaseModel):
     message: str
 
 
-class Rule:
+class Rule(BaseModel):
     rule_id: int
     description: str
     status: str
 
-class ExtractedField:
+class ExtractedField(BaseModel):
     customer_name: str
     customer_account: str
     amount_paid: float
@@ -18,7 +20,11 @@ class ExtractedField:
     validation_rules: List[Rule]
     field_validations: List[FieldValidation]
 
-class FinalResponse:
+class FinalResponse(BaseModel):
+    model_config = ConfigDict(
+        # This is the line that fixes the error
+        arbitrary_types_allowed=True 
+    )
     client_id: int
     client_name: str
     process_type: int

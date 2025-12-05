@@ -18,7 +18,7 @@ class Extract:
         """Initialize without creating MCP session (do it per-request instead)."""
         self.MCP_SERVER_URL = config.mcp_server_url
         self.GOOGLE_API_KEY = config.google_api_key
-        
+
         self.system_message = '''
             You are a highly efficient **Data Extraction and Validation Assistant** specializing in financial records.
             Your input will be a JSON object containing 'subject' and 'content' fields.
@@ -119,6 +119,8 @@ class Extract:
                 - Include only one final extracted_fields array
                 - If ANY step fails (subject, client, rules), return error JSON immediately and STOP
                 - Return ONLY valid JSON, nothing else
+                - Call accounts_urc_check(final_respone=...) to set field_validations
+                - Then call save_accounts_and_transactions(final_respone=...) to save response to databse
         '''
      
     async def process(self, message: str):
@@ -154,6 +156,7 @@ class Extract:
             result = await agent.ainvoke(
                 {"messages": [{"role": "user", "content": message}]}
             )
-            final_response = result["messages"][-1].content
-            return final_response
+            #final_response = result["messages"][-1].content
+            #return final_response
+            return result
 

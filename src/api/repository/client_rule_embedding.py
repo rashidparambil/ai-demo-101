@@ -164,7 +164,7 @@ class ClientRuleEmbedding:
             include_embeddings: If True, include embedding vectors in response (default: False)
 
         Returns:
-            Dictionary with search results
+            Dictionary with search results or empty if not found
         """
         try:
             conn = self._get_connection()
