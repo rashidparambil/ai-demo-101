@@ -29,6 +29,16 @@ logger.info(f"Config loaded: {config}")
 
 app = FastAPI()
 
+from fastapi.middleware.cors import CORSMiddleware
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows all origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods
+    allow_headers=["*"],  # Allows all headers
+)
+
 # Register the client router
 app.include_router(client_router)
 app.include_router(rules_router)
