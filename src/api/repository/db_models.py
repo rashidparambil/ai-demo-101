@@ -65,3 +65,15 @@ class AccountTransaction(Base):
     transaction_amount = Column(Numeric(10, 2))
     fee_amount = Column(Numeric(10, 2))
     correlation_id = Column(UUID(as_uuid=True))
+
+from sqlalchemy.dialects.postgresql import JSONB
+
+class ProcessLogTable(Base):
+    """SQLAlchemy ORM model for the process_log table."""
+    __tablename__ = "process_log"
+
+    id = Column(Integer, primary_key=True, index=True)
+    correlation_id = Column(UUID(as_uuid=True))
+    process_type = Column(Integer)
+    details = Column(JSONB)
+

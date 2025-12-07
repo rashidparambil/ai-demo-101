@@ -121,6 +121,11 @@ class Extract:
                 - Return ONLY valid JSON, nothing else
                 - Call accounts_urc_check(final_respone=...) to set field_validations
                 - Then call save_accounts_and_transactions(final_respone=...) to save response to databse
+                - Finally call save_process_log(process_log=...) with:
+                    * correlation_id: extracted from the content or generated
+                    * process_type: process_type from Step 1
+                    * details: the entire final_response JSON
+
         '''
      
     async def process(self, message: str):
@@ -139,6 +144,8 @@ class Extract:
             mcptools = await load_mcp_tools(session)
 
             combined_tools = [remove_space_sepcial_chars_from_account_number, check_negative_balance_amount, validate_subject] + mcptools
+            # Note: save_process_log is now in mcptools
+
 
             llm = ChatGoogleGenerativeAI(
                 model="gemini-2.5-flash",
