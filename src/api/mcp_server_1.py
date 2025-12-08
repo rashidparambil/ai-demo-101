@@ -16,9 +16,11 @@ from api.repository.database import SessionLocal
 from api.repository.account import AccountRepository
 from api.repository.account_transaction import AccountTransactionRepository
 from api.repository.db_models import Account as AccountTable, AccountTransaction as AccountTransactionTable
-from api.repository.models import Account as AccountModel, AccountTransaction as AccountTransactionModel
-from api.repository.final_response import FieldValidation, FinalResponse
 from api.repository.process_type import ProcessType
+from api.repository.process_log_repository import ProcessLogRepository
+from api.repository.models import Account as AccountModel, AccountTransaction as AccountTransactionModel, ProcessLog
+from api.repository.final_response import FinalResponse, FieldValidation
+
 from typing import List
 import json
 
@@ -183,8 +185,8 @@ def accounts_urc_check(final_response: FinalResponse) -> FinalResponse:
     finally:
         db.close()
 
-@mcp.tool("save_accounts_and_transactions", description="Save accounts and transactions. Args: {final_response: FinalResponse}")
-def save_accounts_and_transactions(final_response: FinalResponse) -> FinalResponse:
+@mcp.tool("save_accounts_and_transactions", description="Save accounts and transactions. Args: {final_response: FinalResponse, correlation_id: str}")
+def save_accounts_and_transactions(final_response: FinalResponse, correlation_id: str) -> FinalResponse:
     """
     Save accounts and transaction to database
     Returns: FinalResponse.
@@ -192,7 +194,7 @@ def save_accounts_and_transactions(final_response: FinalResponse) -> FinalRespon
     try:
         db = SessionLocal()
         repo = AccountRepository(db)
-        repo.process_accounts(final_response.model_dump_json())
+        repo.process_accounts(final_response.model_dump_json(), correlation_id)
         print("Account and transaction updated to database")
         return final_response
     except Exception as e:
@@ -259,6 +261,25 @@ def bulk_create_transactions(transactions: List[dict]) -> List[dict]:
         return [AccountTransactionModel.from_orm(t).dict() for t in created_transactions]
     except Exception as e:
         logger.exception("Failed to bulk create transactions")
+        raise e
+    finally:
+        db.close()
+
+@mcp.tool("save_process_log", description="Save process log. Args: {process_log: ProcessLog}")
+def save_process_log(process_log: dict) -> dict:
+    """
+    Save process log to database.
+    """
+    print(f"**************************************Saving process log*************")
+    try:
+        db = SessionLocal()
+        repo = ProcessLogRepository(db)
+        # Validate input with Pydantic model
+        log_model = ProcessLog(**process_log)
+        saved_log = repo.save(log_model)
+        return {"id": saved_log.id, "status": "saved"}
+    except Exception as e:
+        logger.exception("Failed to save process log")
         raise e
     finally:
         db.close()
