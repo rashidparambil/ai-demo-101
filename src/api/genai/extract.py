@@ -2,6 +2,7 @@ import os
 import asyncio
 from dotenv import load_dotenv
 import json
+import uuid
 
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.agents import create_agent
@@ -120,11 +121,12 @@ class Extract:
                 - If ANY step fails (subject, client, rules), return error JSON immediately and STOP
                 - Return ONLY valid JSON, nothing else
                 - Call accounts_urc_check(final_respone=...) to set field_validations
-                - Then call save_accounts_and_transactions(final_respone=...) to save response to databse
+                - Then call save_accounts_and_transactions(final_respone=..., correlation_id="...") to save response to database. Use the Correlation ID provided in the user's initial message.
                 - Finally call save_process_log(process_log=...) with:
                     * correlation_id: extracted from the content or generated
                     * process_type: process_type from Step 1
                     * details: the entire final_response JSON
+
 
         '''
      
@@ -159,9 +161,12 @@ class Extract:
                                  system_prompt=self.system_message
                                  )
             
+            # Generate a correlation ID for this request
+            request_correlation_id = str(uuid.uuid4())
+            
             # Use the agent within the session context
             result = await agent.ainvoke(
-                {"messages": [{"role": "user", "content": message}]}
+                {"messages": [{"role": "user", "content": f"Correlation ID: {request_correlation_id}\n\n{message}"}]}
             )
             #final_response = result["messages"][-1].content
             #return final_response

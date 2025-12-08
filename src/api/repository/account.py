@@ -83,14 +83,14 @@ class AccountRepository:
             self.db.rollback()
             raise e
 
-    def process_accounts(self, final_response: str) -> bool:
+    def process_accounts(self, final_response: str, correlation_id: str) -> bool:
         """Insert accounts and transaction from final_response json"""
         conn = None
         try:
             conn = self._get_connection()
             cursor = conn.cursor()
-            sql = "call public.process_accounts_and_transaction_from_json(%s::json)"
-            cursor.execute(sql, (final_response,))
+            sql = "call public.process_accounts_and_transaction_from_json(%s::json, %s::uuid)"
+            cursor.execute(sql, (final_response, correlation_id))
             conn.commit()
             return True
         except psycopg2.Error as e:

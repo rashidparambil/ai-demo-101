@@ -1,11 +1,11 @@
 -- DROP PROCEDURE public.process_accounts_and_transaction_from_json(json);
 
-CREATE OR REPLACE PROCEDURE public.process_accounts_and_transaction_from_json(IN p_json_data json)
+CREATE OR REPLACE PROCEDURE public.process_accounts_and_transaction_from_json(IN p_json_data json, IN p_correlation_id uuid)
  LANGUAGE plpgsql
 AS $procedure$
 DECLARE
     -- Generate a single UUID for all records in this batch insertion for traceability
-    v_correlation_id uuid := gen_random_uuid();
+    v_correlation_id uuid := p_correlation_id;
     v_client_id integer;
 	v_process_type integer;
 BEGIN

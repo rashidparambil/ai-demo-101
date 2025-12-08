@@ -185,8 +185,8 @@ def accounts_urc_check(final_response: FinalResponse) -> FinalResponse:
     finally:
         db.close()
 
-@mcp.tool("save_accounts_and_transactions", description="Save accounts and transactions. Args: {final_response: FinalResponse}")
-def save_accounts_and_transactions(final_response: FinalResponse) -> FinalResponse:
+@mcp.tool("save_accounts_and_transactions", description="Save accounts and transactions. Args: {final_response: FinalResponse, correlation_id: str}")
+def save_accounts_and_transactions(final_response: FinalResponse, correlation_id: str) -> FinalResponse:
     """
     Save accounts and transaction to database
     Returns: FinalResponse.
@@ -194,7 +194,7 @@ def save_accounts_and_transactions(final_response: FinalResponse) -> FinalRespon
     try:
         db = SessionLocal()
         repo = AccountRepository(db)
-        repo.process_accounts(final_response.model_dump_json())
+        repo.process_accounts(final_response.model_dump_json(), correlation_id)
         print("Account and transaction updated to database")
         return final_response
     except Exception as e:
