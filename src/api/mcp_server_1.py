@@ -20,6 +20,7 @@ from api.repository.process_type import ProcessType
 from api.repository.process_log_repository import ProcessLogRepository
 from api.repository.models import Account as AccountModel, AccountTransaction as AccountTransactionModel, ProcessLog
 from api.repository.final_response import FinalResponse, FieldValidation
+from api.chat_bot.service import ChatBotService
 
 from typing import List
 import json
@@ -29,6 +30,8 @@ from mcp.server.fastmcp import FastMCP
 
 import psycopg2
 from psycopg2.extras import RealDictCursor
+
+service = ChatBotService()
 
 # load_dotenv()
 logging.basicConfig(level=logging.INFO)
@@ -283,6 +286,15 @@ def save_process_log(process_log: dict) -> dict:
         raise e
     finally:
         db.close()
+
+
+@mcp.tool("query_database", description="Execute a natural language query against the database. Args: {query: str}")
+async def query_database(query: str) -> dict:
+    """
+    Executes a natural language query against the database.
+    Returns: Structured answer containing generated SQL, result, and final answer.
+    """
+    return await service.process_query(query)        
 
 if __name__ == "__main__":
     # Run as streamable-http MCP server (exposes POST /mcp)
