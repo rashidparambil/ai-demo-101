@@ -44,11 +44,11 @@ class Extract:
        
                For EVERY record extracted in Step 4:
    
-                For EVERY field in that record (customer_name, customer_account, amount):
+                For EVERY field in that record (customer_name, customer_account, amount_paid, balance_amount):
                 
                     a) Find all rules for that field from Step 3 where is_auto_apply is True. 
 
-                    b) Execute tools that match the rule where ia_auto_apply is False.
+                    b) Execute tools that match the rule where is_auto_apply is False.
 
                     c) Do not apply other rules except.
                     
