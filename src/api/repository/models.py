@@ -46,3 +46,15 @@ class AccountTransaction(BaseModel):
 
     class Config:
         from_attributes = True
+
+from typing import Any, Dict
+
+class ProcessLog(BaseModel):
+    """Schema for a process log."""
+    id: Optional[int] = None
+    correlation_id: Optional[UUID] = None
+    process_type: int
+    details: Dict[str, Any]
+
+    class Config:
+        from_attributes = True

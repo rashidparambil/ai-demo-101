@@ -46,3 +46,18 @@ Please initiate processing of following from ABC Company.\nABC Company\nJohn Doe
   "subject": "Placement Processing",
   "content": "Please initiate processing of following from Ai Notts.\nAi Notts\nJohn Doe, 12064& 654654, 50, 150, 12/12/2025\nRobert T, 0987654328777, 9, 300, 12/12/2025\nDavid  B, 12064657988, 9, 251, 12/12/2025\n3"
 }
+
+
+
+
+
+# docker build -t ai-demo-101-mcp .
+# docker run -d -p 7080:7080 --name ai-demo-101-mcp ai-demo-101-mcp
+
+# docker build -t ai-demo-101-api .
+# docker run -d -p 7081:7081 --name ai-demo-101-api ai-demo-101-api
+
+
+
+
+
