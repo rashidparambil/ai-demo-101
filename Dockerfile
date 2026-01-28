@@ -2,6 +2,9 @@
 FROM python:3.11-slim
 
 # Define build args with defaults
+# ARG APP_MODULE=src.api.mcp_server_1:app
+# ARG PORT=7080
+
 ARG APP_MODULE=src.api.main:app
 ARG PORT=7081
 
@@ -33,7 +36,7 @@ RUN useradd -m appuser && chown -R appuser /app
 USER appuser
 
 # Informational; Cloud Run sets PORT env at runtime (default 8080)
-EXPOSE 7081
+EXPOSE ${PORT}
 
 # Use shell so runtime env vars (APP_MODULE, PORT) are respected by uvicorn
 # Uvicorn will import 'src.api.mcp_server_1:app' which finds src/api/mcp_server_1.py
