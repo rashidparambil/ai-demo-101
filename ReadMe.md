@@ -47,6 +47,11 @@ Please initiate processing of following from ABC Company.\nABC Company\nJohn Doe
   "content": "Please initiate processing of following from Ai Notts.\nAi Notts\nJohn Doe, 12064& 654654, 50, 150, 12/12/2025\nRobert T, 0987654328777, 9, 300, 12/12/2025\nDavid  B, 12064657988, 9, 251, 12/12/2025\n3"
 }
 
+# chat questions 
+#  Find all rules related to cleaning or formatting account numbers for Ai Notts 
+#  Are the 'Fee Limit' rules set to apply automatically? 
+#  Which clients are currently holding the highest amount of unpaid fees across all their accounts? 
+#  provide a brief narrative summary of the results for correlation ID 'd81243b9-5804-4232-bb9c-5a4422162238' 
 
 
 
