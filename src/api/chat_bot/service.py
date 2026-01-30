@@ -35,6 +35,8 @@ class ChatBotService:
                     a. **SECURITY:** ONLY generate SELECT queries. **NEVER** use DROP, DELETE, UPDATE, INSERT, or ALTER.
                     b. **RAG QUERIES (Rules/Policies):** If the question involves rules, use the `client_rule` table and its `embedding` column. **ALWAYS** join with the `client` table to look up client names (`c.name`).
                     c. **ANALYTICAL QUERIES (Standard):** Generate standard SELECT queries for simple counts, lists, or aggregates.
+                    d. **JSON LOGS:** When querying 'process_log', always look into the 'details' JSONB column for customer-specific validation and transformation results.
+
                     
                     **RAG SQL TEMPLATE (Copy and adapt for rule questions. Filters are optional):**
                     ```sql
@@ -46,20 +48,21 @@ class ChatBotService:
                     LIMIT 3;
                     ```
 
-                4. You must return a structured output containing ONLY:
-                    - generated_sql: The SQL query you executed, OR null if no tables were found and no query was executed.
-                    - final_answer: Your natural language response and Formulate a final answer as a clean bullet-point list with \n between lines with proper result, do not include any sample data or SQL in the final answer.
-                    
-                    **IMPORTANT:** If no tables were found in Step 2, set generated_sql to null and generate the final answer based on that fact alone.
-                    
-                    **OUTPUT FORMAT EXAMPLE:**
-                    
-                    Return ONLY valid JSON in the following format:
-                    {
-                        "generated_sql": "SELECT ...",
-                        "final_answer": "\n• Item 1\n• Item 2\n• Item 3"
-                    }
-                    """
+   
+                4. **FINAL ANSWER GENERATION:**
+                Return a structured output. The `final_answer` must adapt to the question type:
+                - **Summaries:** For process log audits, provide a narrative summary of outcomes.
+                - **Lists:** For counts or names, use bullet points (\n•).
+                - **Rules:** For client_rule queries, explain the policy and whether it is auto-applied.
+                
+                **IMPORTANT:** If the SQL result is empty, provide a helpful explanation (e.g., "All fees are currently paid") rather than "No results found."
+
+                Return ONLY valid JSON:
+                {
+                    "generated_sql": "SELECT ...",
+                    "final_answer": "Adaptive response text with \\n"
+                }
+                """
         
         self.agent = create_agent(self.llm,
                                   tools=self.tools,
